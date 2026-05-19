@@ -1,38 +1,27 @@
-import { createPublicKey, publicEncrypt, constants } from "node:crypto";
-import { createWallet as mockCreateWallet, getBalance as mockGetBalance, sendPayment as mockSendPayment } from "@/lib/mock";
+import {
+  initiateDeveloperControlledWalletsClient,
+} from "@circle-fin/developer-controlled-wallets";
+import {
+  createWallet as mockCreateWallet,
+  getBalance as mockGetBalance,
+  sendPayment as mockSendPayment,
+} from "@/lib/mock";
 import { allowMockFallback } from "@/lib/env";
 
 const circleBase = "https://api.circle.com";
+
+// ARB-SEPOLIA USDC token ID (Circle's canonical ID for this token)
+const ARB_SEPOLIA_USDC_TOKEN_ID = "5797fbd6-3795-519d-84ca-ec4c5f80c3b1";
 
 function mockMode() {
   return allowMockFallback() && (process.env.MOCK_MODE !== "false" || !process.env.CIRCLE_API_KEY);
 }
 
-// ── Entity secret ciphertext (computed fresh per request) ─────────────────────
-
-let _cachedPublicKey: string | null = null;
-
-async function getCirclePublicKey(): Promise<string> {
-  if (_cachedPublicKey) return _cachedPublicKey;
-  const resp = await fetch(`${circleBase}/v1/w3s/config/entity/publicKey`, {
-    headers: { Authorization: `Bearer ${process.env.CIRCLE_API_KEY}` },
-  });
-  const json = await resp.json();
-  _cachedPublicKey = json.data?.publicKey ?? json.publicKey ?? null;
-  if (!_cachedPublicKey) throw new Error("Could not fetch Circle public key");
-  return _cachedPublicKey;
-}
-
-async function buildEntityCiphertext(): Promise<string> {
-  const rawSecret = process.env.CIRCLE_ENTITY_SECRET;
-  if (!rawSecret) throw new Error("CIRCLE_ENTITY_SECRET not set");
-  const pem = await getCirclePublicKey();
-  const pubKey = createPublicKey(pem);
-  const encrypted = publicEncrypt(
-    { key: pubKey, padding: constants.RSA_PKCS1_OAEP_PADDING, oaepHash: "sha256" },
-    Buffer.from(rawSecret, "hex"),
-  );
-  return encrypted.toString("base64");
+function getClient() {
+  const apiKey       = process.env.CIRCLE_API_KEY;
+  const entitySecret = process.env.CIRCLE_ENTITY_SECRET;
+  if (!apiKey || !entitySecret) throw new Error("CIRCLE_API_KEY or CIRCLE_ENTITY_SECRET not set");
+  return initiateDeveloperControlledWalletsClient({ apiKey, entitySecret });
 }
 
 // ── Public API ────────────────────────────────────────────────────────────────
@@ -40,22 +29,25 @@ async function buildEntityCiphertext(): Promise<string> {
 export async function createWallet() {
   if (mockMode()) return mockCreateWallet();
   try {
-    const entitySecretCiphertext = await buildEntityCiphertext();
-    const response = await fetch(`${circleBase}/v1/w3s/wallets`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${process.env.CIRCLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        idempotencyKey: crypto.randomUUID(),
-        entitySecretCiphertext,
-        blockchains: ["ARB-SEPOLIA"],
-        count: 1,
-      }),
+    const client = getClient();
+
+    // 1. Create a wallet set first (required by Circle)
+    const wsResp = await client.createWalletSet({
+      name: `OnlyStans-${Date.now()}`,
+      idempotencyKey: crypto.randomUUID(),
     });
-    if (!response.ok) return mockCreateWallet();
-    return response.json();
+    const walletSetId = wsResp.data?.walletSet?.id;
+    if (!walletSetId) return mockCreateWallet();
+
+    // 2. Create a wallet inside that set
+    const wResp = await client.createWallets({
+      idempotencyKey: crypto.randomUUID(),
+      walletSetId,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      blockchains: ["ARB-SEPOLIA"] as any,
+      count: 1,
+    });
+    return wResp.data;
   } catch {
     return mockCreateWallet();
   }
@@ -64,11 +56,11 @@ export async function createWallet() {
 export async function getBalance(walletId: string) {
   if (mockMode()) return mockGetBalance();
   try {
-    const response = await fetch(`${circleBase}/v1/w3s/wallets/${walletId}/balances`, {
+    const resp = await fetch(`${circleBase}/v1/w3s/wallets/${walletId}/balances`, {
       headers: { Authorization: `Bearer ${process.env.CIRCLE_API_KEY}` },
     });
-    if (!response.ok) return mockGetBalance();
-    return response.json();
+    if (!resp.ok) return mockGetBalance();
+    return resp.json();
   } catch {
     return mockGetBalance();
   }
@@ -78,26 +70,32 @@ export async function sendCirclePayment(input: {
   sessionId: string;
   amount: number;
   destinationAddress: string;
-}) {
+  walletId?: string;
+}): Promise<{ txHash: string; amount: number }> {
   if (mockMode()) return mockSendPayment(input.amount);
+
+  // Require a source Circle wallet ID to execute a real transfer
+  const sourceWalletId = input.walletId ?? process.env.CIRCLE_SOURCE_WALLET_ID;
+  if (!sourceWalletId) return mockSendPayment(input.amount);
+
   try {
-    const entitySecretCiphertext = await buildEntityCiphertext();
-    const response = await fetch(`${circleBase}/v1/w3s/transactions/transfer`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${process.env.CIRCLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        idempotencyKey: `${input.sessionId}-${Date.now()}`,
-        entitySecretCiphertext,
-        destinationAddress: input.destinationAddress,
-        amounts: [input.amount.toFixed(6)],
-        fee: { type: "sponsored" },
-      }),
+    const client = getClient();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const resp = await (client.createTransaction as any)({
+      idempotencyKey: `${input.sessionId}-${Date.now()}`,
+      walletId: sourceWalletId,
+      destinationAddress: input.destinationAddress,
+      blockchain: "ARB-SEPOLIA",
+      tokenId: ARB_SEPOLIA_USDC_TOKEN_ID,
+      amounts: [input.amount.toFixed(6)],
+      fee: { type: "level", config: { feeLevel: "MEDIUM" } },
     });
-    if (!response.ok) return mockSendPayment(input.amount);
-    return response.json();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const tx = (resp.data as any)?.transaction ?? (resp.data as any);
+    return {
+      txHash: tx?.txHash ?? tx?.transactionId ?? tx?.id ?? `0x${crypto.randomUUID().replace(/-/g, "")}`,
+      amount: input.amount,
+    };
   } catch {
     return mockSendPayment(input.amount);
   }

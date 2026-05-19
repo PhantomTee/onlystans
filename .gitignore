@@ -45,3 +45,5 @@ circle-recovery/
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+.vercel
