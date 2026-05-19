@@ -1,11 +1,11 @@
 /**
- * Registers the CIRCLE_ENTITY_SECRET with Circle by encrypting it with
- * Circle's RSA public key and POSTing the ciphertext.
+ * Registers your CIRCLE_ENTITY_SECRET with Circle using the official SDK.
  * Run once: node scripts/register-entity-secret.mjs
  */
 
-import { createPublicKey, publicEncrypt, constants } from "node:crypto";
+import { registerEntitySecretCiphertext } from "@circle-fin/developer-controlled-wallets";
 import fs from "node:fs";
+import path from "node:path";
 
 // Load .env.local manually
 const env = fs.readFileSync(".env.local", "utf8");
@@ -20,64 +20,37 @@ for (const line of env.split(/\r?\n/)) {
 
 const API_KEY       = process.env.CIRCLE_API_KEY;
 const ENTITY_SECRET = process.env.CIRCLE_ENTITY_SECRET;
-const BASE          = "https://api.circle.com";
 
 if (!API_KEY || !ENTITY_SECRET) {
-  console.error("CIRCLE_API_KEY or CIRCLE_ENTITY_SECRET not set in .env.local");
+  console.error("❌  CIRCLE_API_KEY or CIRCLE_ENTITY_SECRET not set in .env.local");
   process.exit(1);
 }
 
-console.log("Fetching Circle public key...");
-const pkResp = await fetch(`${BASE}/v1/w3s/config/entity/publicKey`, {
-  headers: { Authorization: `Bearer ${API_KEY}` },
-});
+const recoveryDir = path.resolve("circle-recovery");
+fs.mkdirSync(recoveryDir, { recursive: true });
 
-if (!pkResp.ok) {
-  const text = await pkResp.text();
-  console.error("Failed to fetch public key:", pkResp.status, text);
-  process.exit(1);
+console.log("Registering entity secret with Circle...");
+
+try {
+  const result = await registerEntitySecretCiphertext({
+    apiKey: API_KEY,
+    entitySecret: ENTITY_SECRET,
+    recoveryFileDownloadPath: recoveryDir,
+  });
+
+  console.log("\n✅  Entity secret registered successfully!");
+  console.log("Response:", JSON.stringify(result, null, 2));
+  console.log(`\nRecovery file saved to: ${recoveryDir}`);
+  console.log("Store it securely — Circle cannot recover a lost entity secret.\n");
+} catch (err) {
+  const msg = err?.message ?? String(err);
+  const body = JSON.stringify(err?.response?.data ?? err?.data ?? {});
+
+  if (msg.includes("409") || msg.includes("already") || body.includes("already")) {
+    console.log("\n✅  Entity secret is already registered — nothing to do.");
+  } else {
+    console.error("\n❌  Registration failed:", msg);
+    if (body !== "{}") console.error("Details:", body);
+    process.exit(1);
+  }
 }
-
-const pkJson      = await pkResp.json();
-const publicKeyPem = pkJson.data?.publicKey ?? pkJson.publicKey;
-if (!publicKeyPem) {
-  console.error("Unexpected public key response:", JSON.stringify(pkJson, null, 2));
-  process.exit(1);
-}
-console.log("Got Circle public key.");
-
-// Encrypt entity secret with RSA-OAEP-SHA256
-const pubKey    = createPublicKey(publicKeyPem);
-const encrypted = publicEncrypt(
-  { key: pubKey, padding: constants.RSA_PKCS1_OAEP_PADDING, oaepHash: "sha256" },
-  Buffer.from(ENTITY_SECRET, "hex"),
-);
-const ciphertext = encrypted.toString("base64");
-console.log("Ciphertext computed, registering with Circle...");
-
-const regResp = await fetch(`${BASE}/v1/w3s/config/entity/secretciphertext`, {
-  method: "POST",
-  headers: {
-    Authorization: `Bearer ${API_KEY}`,
-    "Content-Type": "application/json",
-  },
-  body: JSON.stringify({ entitySecretCiphertext: ciphertext }),
-});
-
-const regJson = await regResp.json();
-
-if (!regResp.ok) {
-  console.error("Registration failed:", regResp.status, JSON.stringify(regJson, null, 2));
-  process.exit(1);
-}
-
-console.log("\n✅ Entity secret registered successfully with Circle.");
-console.log("Response:", JSON.stringify(regJson, null, 2));
-
-// Save a local recovery file
-fs.mkdirSync("circle-recovery", { recursive: true });
-fs.writeFileSync(
-  "circle-recovery/recovery.json",
-  JSON.stringify({ entitySecret: ENTITY_SECRET, registeredAt: new Date().toISOString() }, null, 2),
-);
-console.log("\nRecovery file saved to circle-recovery/recovery.json — store this securely.");
