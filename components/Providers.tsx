@@ -25,9 +25,10 @@ export function WalletConnect() {
     return (
       <button
         onClick={() => disconnect()}
-        className="group flex items-center gap-2 rounded-xl border border-teal-500/30 bg-teal-500/10 px-3 py-1.5 text-xs font-mono font-medium text-teal-300 transition hover:border-teal-500/50 hover:bg-teal-500/20"
+        className="group flex items-center gap-2 rounded-xl border px-3 py-1.5 text-xs font-mono font-semibold transition"
+        style={{ borderColor: "rgba(255,107,0,0.35)", background: "rgba(255,107,0,0.10)", color: "rgba(255,140,60,0.95)" }}
       >
-        <span className="h-1.5 w-1.5 rounded-full bg-teal-400 shadow-[0_0_6px_1px_rgba(45,212,191,0.6)]" />
+        <span className="h-1.5 w-1.5 rounded-full" style={{ background: "#FF6B00", boxShadow: "0 0 8px rgba(255,107,0,0.8)" }} />
         {address.slice(0, 6)}…{address.slice(-4)}
       </button>
     );
@@ -38,7 +39,8 @@ export function WalletConnect() {
     <button
       onClick={() => connect({ connector: injector })}
       disabled={isPending}
-      className="flex items-center gap-2 rounded-xl border border-white/[0.1] bg-white/[0.04] px-3 py-1.5 text-xs font-medium text-zinc-300 transition hover:border-teal-500/40 hover:bg-teal-500/10 hover:text-teal-300 disabled:opacity-50"
+      className="btn-primary text-xs py-2 px-4 disabled:opacity-50"
+      style={{ borderRadius: "12px", fontSize: "12px", padding: "7px 16px" }}
     >
       {isPending ? "Connecting…" : "Connect Wallet"}
     </button>

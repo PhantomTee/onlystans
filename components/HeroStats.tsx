@@ -43,11 +43,15 @@ export function HeroStats({ videoCount, live, totalEarned }: HeroStatsProps) {
   ];
 
   return (
-    <div className="grid grid-cols-3 gap-2 rounded-2xl border border-white/[0.07] bg-white/[0.02] p-4">
-      {stats.map(({ label, value }) => (
-        <div key={label} className="text-center">
-          <div className="font-mono text-xl font-semibold text-white tabular-nums">{value}</div>
-          <div className="text-[11px] text-zinc-600">{label}</div>
+    <div className="grid grid-cols-3 gap-px overflow-hidden rounded-2xl border border-white/[0.07]"
+      style={{ background: "rgba(255,255,255,0.03)" }}>
+      {stats.map(({ label, value }, i) => (
+        <div key={label} className="flex flex-col items-center justify-center gap-1 px-3 py-5"
+          style={{ borderLeft: i > 0 ? "1px solid rgba(255,255,255,0.06)" : "none" }}>
+          <div className="font-mono text-lg font-bold text-white tabular-nums tracking-tight"
+            style={{ fontFamily: "var(--font-syne)" }}>{value}</div>
+          <div className="text-center text-[10px] uppercase tracking-[0.12em]"
+            style={{ color: "rgba(255,255,255,0.3)", fontFamily: "var(--font-jetbrains)" }}>{label}</div>
         </div>
       ))}
     </div>
