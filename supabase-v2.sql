@@ -19,12 +19,10 @@ create table if not exists public.subscriptions (
   created_at      timestamptz not null default now()
 );
 
-create unique index if not exists subs_viewer_creator_active
-  on public.subscriptions(viewer_id, creator_handle)
-  where expires_at > now();
-
+create index if not exists subs_viewer_creator_idx on public.subscriptions(viewer_id, creator_handle);
 create index if not exists subs_creator_handle_idx on public.subscriptions(creator_handle);
 create index if not exists subs_viewer_idx         on public.subscriptions(viewer_id);
+create index if not exists subs_expires_idx        on public.subscriptions(expires_at);
 
 -- ── Follows ──────────────────────────────────────────────────────────────────
 create table if not exists public.follows (
