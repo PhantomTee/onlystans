@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { BadgeDollarSign, CheckCircle2, CloudUpload, Sparkles, X } from "lucide-react";
+import { BadgeDollarSign, CheckCircle2, CloudUpload, Crown, Lock, Sparkles, Unlock, X } from "lucide-react";
 import { estimatedMonthly, usd } from "@/lib/utils";
 
 const PRESETS = [
@@ -20,7 +20,8 @@ export function UploadForm() {
   const [title,       setTitle]       = useState("");
   const [description, setDescription] = useState("");
   const [tags,        setTags]        = useState("");
-  const [subRate,     setSubRate]     = useState("");
+  const [isPaid,      setIsPaid]      = useState(false);
+  const [subPrice,    setSubPrice]    = useState("5.00");
   const [status,      setStatus]      = useState<UploadStatus>("idle");
   const [statusMsg,   setStatusMsg]   = useState("");
   const [txHash,      setTxHash]      = useState("");
@@ -28,7 +29,7 @@ export function UploadForm() {
 
   async function onFile(nextFile: File | null) {
     if (!nextFile) return;
-    if (nextFile.size > 100 * 1024 * 1024) { setStatusMsg("Max file size is 100 MB."); return; }
+    if (nextFile.size > 20 * 1024 * 1024) { setStatusMsg("Max file size is 20 MB."); setStatus("error"); return; }
     setFile(nextFile);
     setStatus("tagging");
     setStatusMsg("Auto-tagging with AI…");
@@ -57,7 +58,8 @@ export function UploadForm() {
         title, description,
         tags: tags.split(",").map((t) => t.trim()).filter(Boolean),
         ratePerSecond: rate,
-        subscriptionRate: subRate ? Number(subRate) : undefined,
+        isPaidTier: isPaid,
+        subscriptionPrice: isPaid && subPrice ? Number(subPrice) : undefined,
         videoCid: upload.cid, thumbnailCid: "first-frame", src: upload.src,
       }),
     }).then((r) => r.json());
@@ -112,7 +114,7 @@ export function UploadForm() {
             <CloudUpload className={`h-10 w-10 ${dragOver ? "text-violet-400" : "text-zinc-600"}`} />
             <div className="text-center">
               <p className="text-sm font-medium text-zinc-300">Drop an MP4 or click to choose</p>
-              <p className="text-xs text-zinc-600">Max 100 MB</p>
+              <p className="text-xs text-zinc-600">Max 20 MB · MP4</p>
             </div>
           </>
         )}
@@ -172,15 +174,39 @@ export function UploadForm() {
           Est. with 1,000 viewers × 5 min/day: <span className="text-zinc-400">{usd(monthly, 2)}/month</span>
         </p>
 
-        {/* Subscription bundle */}
-        <div className="border-t border-white/[0.06] pt-4">
-          <p className="mb-2 text-xs text-zinc-600">Optional: flat monthly subscription rate (USDC)</p>
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-zinc-500">$</span>
-            <input value={subRate} onChange={(e) => setSubRate(e.target.value)} placeholder="e.g. 4.99"
-              className="w-32 rounded-xl border border-white/[0.08] bg-white/[0.04] px-3 py-2 text-sm text-white outline-none ring-violet-400/25 transition focus:ring-2" />
-            <span className="text-xs text-zinc-600">/month — shown as an option alongside per-second</span>
+        {/* Free / Paid toggle */}
+        <div className="border-t border-white/[0.06] pt-4 space-y-3">
+          <p className="text-xs font-semibold uppercase tracking-wider text-zinc-600">Access Model</p>
+          <div className="grid grid-cols-2 gap-2">
+            <button type="button" onClick={() => setIsPaid(false)}
+              className={`flex items-center gap-2 rounded-xl border p-3 transition ${!isPaid ? "border-teal-400/50 bg-teal-400/10 text-teal-300" : "border-white/[0.07] text-zinc-500 hover:border-white/15"}`}>
+              <Unlock className="h-4 w-4" />
+              <div className="text-left">
+                <p className="text-sm font-semibold">Free</p>
+                <p className="text-xs text-zinc-600">Anyone can watch</p>
+              </div>
+            </button>
+            <button type="button" onClick={() => setIsPaid(true)}
+              className={`flex items-center gap-2 rounded-xl border p-3 transition ${isPaid ? "border-violet-400/50 bg-violet-400/10 text-violet-300" : "border-white/[0.07] text-zinc-500 hover:border-white/15"}`}>
+              <Crown className="h-4 w-4" />
+              <div className="text-left">
+                <p className="text-sm font-semibold">Paid</p>
+                <p className="text-xs text-zinc-600">Subscription required</p>
+              </div>
+            </button>
           </div>
+          {isPaid && (
+            <div className="flex items-center gap-2 rounded-xl border border-violet-400/20 bg-violet-400/[0.05] p-3">
+              <Lock className="h-4 w-4 text-violet-400 shrink-0" />
+              <div className="flex items-center gap-2 flex-1">
+                <span className="text-sm text-zinc-400">Subscription price:</span>
+                <span className="text-zinc-400">$</span>
+                <input value={subPrice} onChange={(e) => setSubPrice(e.target.value)} placeholder="5.00"
+                  className="w-24 rounded-lg border border-white/[0.08] bg-white/[0.04] px-2 py-1 text-sm text-white outline-none ring-violet-400/25 transition focus:ring-2" />
+                <span className="text-xs text-zinc-600">USDC/month</span>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

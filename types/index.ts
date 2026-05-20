@@ -7,6 +7,9 @@ export type Creator = {
   walletId: string;
   walletAddress: string;
   bio: string;
+  isPaidTier?: boolean;
+  subscriptionPrice?: number; // USDC/month — undefined = free
+  ratePerSecond?: number;
 };
 
 export type Chapter = {
@@ -61,4 +64,21 @@ export type HistoryEntry = {
   thumbnailSrc: string;
   handle: string;
   watchedAt: string;
+};
+
+export type Subscription = {
+  id: string;
+  viewerId: string;
+  creatorHandle: string;
+  amountPaid: number;
+  txHash: string;
+  startsAt: string;
+  expiresAt: string;
+};
+
+export type ViewerWallet = {
+  walletId: string;
+  address: string;
+  balance: number;
+  totalSpent: number;
 };
