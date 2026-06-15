@@ -283,69 +283,67 @@ export default function MotorModel3D({ attachment }: Props) {
     const rg = rotatingGroupRef.current
     if (!rg) return
 
-    // Dispose and clear existing children
+    // Recursively dispose geometries and materials (handles nested Groups)
+    const disposeObj = (obj: THREE.Object3D) => {
+      obj.traverse(child => {
+        const mesh = child as THREE.Mesh
+        if (mesh.geometry) mesh.geometry.dispose()
+        if (mesh.material) {
+          const m = mesh.material
+          if (Array.isArray(m)) m.forEach(x => x.dispose())
+          else (m as THREE.Material).dispose()
+        }
+      })
+    }
     while (rg.children.length > 0) {
       const child = rg.children[0]
-      if ((child as THREE.Mesh).geometry) (child as THREE.Mesh).geometry.dispose()
-      if ((child as THREE.Mesh).material) {
-        const mat = (child as THREE.Mesh).material
-        if (Array.isArray(mat)) mat.forEach(m => m.dispose())
-        else (mat as THREE.Material).dispose()
-      }
+      disposeObj(child)
       rg.remove(child)
     }
 
     if (attachment === 'fan') {
-      // 4 blades at 90° intervals
+      // 4 blades: each in its own group rotated around shaft axis (X)
+      // so the pitch (rotation.z) is applied identically in every blade's local frame
+      const bladeMat = new THREE.MeshStandardMaterial({ color: 0x7C3AED, metalness: 0.6 })
       for (let i = 0; i < 4; i++) {
-        const angle = i * (Math.PI / 2)
+        const group = new THREE.Group()
+        group.rotation.x = i * (Math.PI / 2)
         const bladeGeo = new THREE.BoxGeometry(0.07, 0.52, 0.07)
-        const bladeMesh = new THREE.Mesh(
-          bladeGeo,
-          new THREE.MeshStandardMaterial({ color: 0x7C3AED, metalness: 0.6 })
-        )
-        bladeMesh.rotation.x = angle
-        bladeMesh.position.y = Math.sin(angle) * 0.26
-        bladeMesh.position.z = Math.cos(angle) * 0.26
-        rg.add(bladeMesh)
+        const bladeMesh = new THREE.Mesh(bladeGeo, bladeMat)
+        bladeMesh.position.y = 0.26   // center blade so it radiates from hub outward
+        bladeMesh.rotation.z = 0.18   // consistent pitch for all blades
+        group.add(bladeMesh)
+        rg.add(group)
       }
-      // Hub
-      const hubGeo = new THREE.CylinderGeometry(0.1, 0.1, 0.12, 16)
       const hubMesh = new THREE.Mesh(
-        hubGeo,
+        new THREE.CylinderGeometry(0.1, 0.1, 0.12, 16),
         new THREE.MeshStandardMaterial({ color: 0x888888 })
       )
       hubMesh.rotation.z = Math.PI / 2
       rg.add(hubMesh)
-      // Guard
-      const guardGeo = new THREE.TorusGeometry(0.38, 0.03, 8, 24)
       const guardMesh = new THREE.Mesh(
-        guardGeo,
+        new THREE.TorusGeometry(0.52, 0.025, 8, 32),
         new THREE.MeshStandardMaterial({ color: 0x444444 })
       )
-      guardMesh.rotation.z = Math.PI / 2
+      guardMesh.rotation.y = Math.PI / 2
       rg.add(guardMesh)
     }
 
     else if (attachment === 'propeller') {
-      // 3 long blades at 120° intervals
+      // 3 long swept blades at 120° intervals — subgroup ensures identical pitch on all blades
+      const bladeMat = new THREE.MeshStandardMaterial({ color: 0x9333ea, metalness: 0.5, roughness: 0.3 })
       for (let i = 0; i < 3; i++) {
-        const angle = i * (2 * Math.PI / 3)
+        const group = new THREE.Group()
+        group.rotation.x = i * (2 * Math.PI / 3)
         const bladeGeo = new THREE.BoxGeometry(0.04, 1.6, 0.18)
-        const bladeMesh = new THREE.Mesh(
-          bladeGeo,
-          new THREE.MeshStandardMaterial({ color: 0x9333ea, metalness: 0.5, roughness: 0.3 })
-        )
-        bladeMesh.rotation.x = angle
-        bladeMesh.position.y = Math.sin(angle) * 0.8
-        bladeMesh.position.z = Math.cos(angle) * 0.8
-        bladeMesh.rotation.z = -0.3
-        rg.add(bladeMesh)
+        const bladeMesh = new THREE.Mesh(bladeGeo, bladeMat)
+        bladeMesh.position.y = 0.8   // blade spans 0 → 1.6 from hub center
+        bladeMesh.rotation.z = -0.18 // pitch angle, same for every blade
+        group.add(bladeMesh)
+        rg.add(group)
       }
-      // Hub
-      const hubGeo = new THREE.CylinderGeometry(0.12, 0.12, 0.15, 16)
       const hubMesh = new THREE.Mesh(
-        hubGeo,
+        new THREE.CylinderGeometry(0.12, 0.12, 0.15, 16),
         new THREE.MeshStandardMaterial({ color: 0x666666 })
       )
       hubMesh.rotation.z = Math.PI / 2
@@ -353,29 +351,27 @@ export default function MotorModel3D({ attachment }: Props) {
     }
 
     else if (attachment === 'flywheel') {
-      // Heavy disc
-      const discGeo = new THREE.CylinderGeometry(0.9, 0.9, 0.28, 48)
       const discMesh = new THREE.Mesh(
-        discGeo,
+        new THREE.CylinderGeometry(0.9, 0.9, 0.28, 48),
         new THREE.MeshStandardMaterial({ color: 0x333333, metalness: 0.95, roughness: 0.15 })
       )
       discMesh.rotation.z = Math.PI / 2
       rg.add(discMesh)
-      // Spokes — 4 boxes at 90° intervals
+      // 4 spokes radiating in the YZ plane (perpendicular to shaft)
+      const spokeMat = new THREE.MeshStandardMaterial({ color: 0x555555, metalness: 0.9 })
       for (let i = 0; i < 4; i++) {
-        const angle = i * (Math.PI / 2)
-        const spokeGeo = new THREE.BoxGeometry(0.6, 0.06, 0.06)
+        const group = new THREE.Group()
+        group.rotation.x = i * (Math.PI / 2)
         const spokeMesh = new THREE.Mesh(
-          spokeGeo,
-          new THREE.MeshStandardMaterial({ color: 0x555555, metalness: 0.9 })
+          new THREE.BoxGeometry(0.06, 0.7, 0.06),  // long in Y = radial direction
+          spokeMat
         )
-        spokeMesh.rotation.x = angle
-        rg.add(spokeMesh)
+        spokeMesh.position.y = 0.35  // offset so spoke runs from hub outward
+        group.add(spokeMesh)
+        rg.add(group)
       }
-      // Hub
-      const hubGeo = new THREE.CylinderGeometry(0.14, 0.14, 0.32, 16)
       const hubMesh = new THREE.Mesh(
-        hubGeo,
+        new THREE.CylinderGeometry(0.14, 0.14, 0.32, 16),
         new THREE.MeshStandardMaterial({ color: 0xaaaaaa, metalness: 1.0 })
       )
       hubMesh.rotation.z = Math.PI / 2
@@ -383,26 +379,20 @@ export default function MotorModel3D({ attachment }: Props) {
     }
 
     else if (attachment === 'grinding') {
-      // Thin abrasive disc
-      const discGeo = new THREE.CylinderGeometry(0.72, 0.72, 0.06, 48)
       const discMesh = new THREE.Mesh(
-        discGeo,
+        new THREE.CylinderGeometry(0.72, 0.72, 0.06, 48),
         new THREE.MeshStandardMaterial({ color: 0x888866, metalness: 0.2, roughness: 0.9 })
       )
       discMesh.rotation.z = Math.PI / 2
       rg.add(discMesh)
-      // Rim
-      const rimGeo = new THREE.TorusGeometry(0.72, 0.04, 6, 48)
       const rimMesh = new THREE.Mesh(
-        rimGeo,
+        new THREE.TorusGeometry(0.72, 0.04, 6, 48),
         new THREE.MeshStandardMaterial({ color: 0x777755 })
       )
-      rimMesh.rotation.z = Math.PI / 2
+      rimMesh.rotation.y = Math.PI / 2
       rg.add(rimMesh)
-      // Hub
-      const hubGeo = new THREE.CylinderGeometry(0.1, 0.1, 0.1, 16)
       const hubMesh = new THREE.Mesh(
-        hubGeo,
+        new THREE.CylinderGeometry(0.1, 0.1, 0.1, 16),
         new THREE.MeshStandardMaterial({ color: 0xaaaaaa })
       )
       hubMesh.rotation.z = Math.PI / 2
@@ -410,35 +400,29 @@ export default function MotorModel3D({ attachment }: Props) {
     }
 
     else if (attachment === 'impeller') {
-      // 6 curved blades at 60° intervals
+      // 6 swept blades at 60° intervals — subgroup ensures identical sweep on all blades
+      const bladeMat = new THREE.MeshStandardMaterial({ color: 0x6D28D9, metalness: 0.7 })
       for (let i = 0; i < 6; i++) {
-        const angle = i * (Math.PI / 3)
+        const group = new THREE.Group()
+        group.rotation.x = i * (Math.PI / 3)
         const bladeGeo = new THREE.BoxGeometry(0.08, 0.4, 0.32)
-        const bladeMesh = new THREE.Mesh(
-          bladeGeo,
-          new THREE.MeshStandardMaterial({ color: 0x6D28D9, metalness: 0.7 })
-        )
-        bladeMesh.rotation.x = angle
-        bladeMesh.position.y = Math.sin(angle) * 0.2
-        bladeMesh.position.z = Math.cos(angle) * 0.2
-        bladeMesh.rotation.z = 0.4
-        rg.add(bladeMesh)
+        const bladeMesh = new THREE.Mesh(bladeGeo, bladeMat)
+        bladeMesh.position.y = 0.22  // blade center offset from hub
+        bladeMesh.rotation.z = 0.38  // backward sweep, same for all blades
+        group.add(bladeMesh)
+        rg.add(group)
       }
-      // Hub
-      const hubGeo = new THREE.CylinderGeometry(0.15, 0.15, 0.14, 16)
       const hubMesh = new THREE.Mesh(
-        hubGeo,
+        new THREE.CylinderGeometry(0.15, 0.15, 0.14, 16),
         new THREE.MeshStandardMaterial({ color: 0x888888 })
       )
       hubMesh.rotation.z = Math.PI / 2
       rg.add(hubMesh)
-      // Shroud ring
-      const shroudGeo = new THREE.TorusGeometry(0.48, 0.04, 8, 32)
       const shroudMesh = new THREE.Mesh(
-        shroudGeo,
+        new THREE.TorusGeometry(0.48, 0.04, 8, 32),
         new THREE.MeshStandardMaterial({ color: 0x5B21B6 })
       )
-      shroudMesh.rotation.z = Math.PI / 2
+      shroudMesh.rotation.y = Math.PI / 2
       rg.add(shroudMesh)
     }
   }, [attachment])
