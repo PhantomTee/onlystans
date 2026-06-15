@@ -1,43 +1,41 @@
 /*
  * RemoteLab — LMS Harmony Theme
- *
- * Mirrors AcademIQ LMS design tokens so the iframe feels native.
- * Source: inferred from shadcn/ui + Vercel/Next.js academic portal conventions.
- * Update values after running the DevTools console snippet in DESIGN_TOKENS.md.
- *
- * USAGE: These variables are consumed by StatusBar, PanelWrapper, and any
- * surface that the user sees before focusing on the instrument panel.
+ * Confirmed design tokens from AcademIQ LMS screenshot analysis.
+ * Primary: DM Serif Display + DM Sans fonts, violet #6D28D9 brand.
  */
 
 :root {
-  /* ── LMS Host Colors (light-mode reference, not used inside dark panels) ── */
-  --lms-bg:               #ffffff;
-  --lms-surface:          #f8fafc;
+  /* ── AcademIQ LMS Confirmed Tokens ── */
+  --lms-bg:               #f0edf9;
+  --lms-surface:          #f8f5fe;
   --lms-card:             #ffffff;
-  --lms-border:           #e2e8f0;
-  --lms-primary:          #1d4ed8;
-  --lms-primary-hover:    #1e40af;
-  --lms-primary-fg:       #f8fafc;
-  --lms-foreground:       #0f172a;
-  --lms-muted:            #f1f5f9;
-  --lms-muted-fg:         #64748b;
-  --lms-subtle-fg:        #94a3b8;
-  --lms-ring:             #1d4ed8;
-  --lms-destructive:      #ef4444;
+  --lms-card-border:      #e5dff5;
+  --lms-primary:          #6D28D9;
+  --lms-primary-dark:     #5B21B6;
+  --lms-primary-light:    #7C3AED;
+  --lms-primary-fg:       #ffffff;
+  --lms-primary-muted:    #ede8f9;
+  --lms-foreground:       #1a1233;
+  --lms-body:             #4a4168;
+  --lms-muted-fg:         #9990b0;
+  --lms-border:           #e5dff5;
+  --lms-ring:             #6D28D9;
+  --lms-shadow-card:      0 1px 3px 0 rgb(109 40 217 / 0.08), 0 1px 2px -1px rgb(109 40 217 / 0.06);
+  --lms-shadow-md:        0 4px 6px -1px rgb(109 40 217 / 0.1), 0 2px 4px -2px rgb(109 40 217 / 0.06);
 
-  /* ── LMS Typography ── */
-  --lms-font-sans:        'Geist', 'Inter', system-ui, sans-serif;
-  --lms-font-mono:        'Geist Mono', 'Share Tech Mono', monospace;
+  /* ── AcademIQ LMS Typography ── */
+  --lms-font-heading:     'DM Serif Display', 'Playfair Display', Georgia, serif;
+  --lms-font-sans:        'DM Sans', 'Inter', system-ui, sans-serif;
+  --lms-font-mono:        'Share Tech Mono', 'Geist Mono', monospace;
 
-  /* ── LMS Geometry ── */
-  --lms-radius-sm:        4px;
+  /* ── AcademIQ LMS Geometry ── */
+  --lms-radius-sm:        6px;
   --lms-radius:           8px;
   --lms-radius-md:        12px;
+  --lms-radius-lg:        16px;
   --lms-radius-full:      9999px;
-  --lms-shadow-sm:        0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --lms-shadow:           0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
 
-  /* ── RemoteLab Instrument Panel Colors (dark, unchanged) ── */
+  /* ── RemoteLab Instrument Panel (dark, unchanged) ── */
   --rl-bg:                #0d0d0d;
   --rl-surface:           #141414;
   --rl-raised:            #1a1a1a;
@@ -45,39 +43,19 @@
   --rl-green:             #00c853;
   --rl-amber:             #ffab00;
   --rl-red:               #ff1744;
-  --rl-blue:              #00b0ff;
+  --rl-blue:              var(--lms-primary);
   --rl-text:              #f0f0f0;
   --rl-muted:             #666666;
   --rl-label:             #888888;
 
-  /* ── RemoteLab Typography (matches LMS font for labels, defers to mono for data) ── */
+  /* ── RemoteLab Typography ── */
   --rl-font-display:      'Rajdhani', var(--lms-font-sans);
-  --rl-font-ui:           'Inter', var(--lms-font-sans);
+  --rl-font-ui:           'DM Sans', 'Inter', var(--lms-font-sans);
   --rl-font-data:         'Share Tech Mono', var(--lms-font-mono);
 
   /* ── Harmony Bridge ── */
-  /*
-   * The status bar sits at the visual boundary between LMS and instrument.
-   * It uses LMS border color for its bottom divider so the transition is
-   * anchored to the host's visual language.
-   */
-  --rl-statusbar-border:  var(--rl-border);
-  --rl-info:              var(--lms-primary);   /* LMS blue bleeds into graph info colour */
-  --rl-focus-ring:        var(--lms-ring);      /* focus states match LMS interaction style */
-}
-
-/*
- * If the LMS ever injects a data-theme="dark" attribute (e.g. user preference),
- * these overrides keep RemoteLab looking correct regardless.
- */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --lms-bg:           #0f172a;
-    --lms-surface:      #1e293b;
-    --lms-card:         #1e293b;
-    --lms-border:       #334155;
-    --lms-foreground:   #f8fafc;
-    --lms-muted:        #1e293b;
-    --lms-muted-fg:     #94a3b8;
-  }
+  --rl-statusbar-bg:      var(--lms-surface);
+  --rl-statusbar-border:  var(--lms-border);
+  --rl-focus-ring:        var(--lms-ring);
+  --rl-info:              var(--lms-primary);
 }
