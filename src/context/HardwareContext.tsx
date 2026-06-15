@@ -87,11 +87,13 @@ export function HardwareProvider({ children }: { children: React.ReactNode }) {
       return updated
     }
 
-    setGraphState(prev => ({
-      rpm: appendPoint(prev.rpm, lastMessage.currentRPM),
-      pwm: appendPoint(prev.pwm, lastMessage.currentPWM),
-      error: appendPoint(prev.error, lastMessage.pidError),
-    }))
+    if (lastMessage.motorStatus === 'RUNNING') {
+      setGraphState(prev => ({
+        rpm: appendPoint(prev.rpm, lastMessage.currentRPM),
+        pwm: appendPoint(prev.pwm, lastMessage.currentPWM),
+        error: appendPoint(prev.error, lastMessage.pidError),
+      }))
+    }
 
     // Record DataLogEntry once per second while motor is RUNNING
     if (lastMessage.motorStatus === 'RUNNING') {
