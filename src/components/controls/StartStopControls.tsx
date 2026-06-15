@@ -32,9 +32,9 @@ export default function StartStopControls() {
         disabled={isRunning}
         style={{
           width: '100%',
-          background: '#00c853',
+          background: 'var(--rl-green)',
           color: '#000',
-          fontFamily: 'Inter, sans-serif',
+          fontFamily: "'DM Sans', sans-serif",
           fontSize: '13px',
           fontWeight: 600,
           padding: '10px',
@@ -55,10 +55,10 @@ export default function StartStopControls() {
         disabled={isStopped}
         style={{
           width: '100%',
-          background: '#ff174422',
-          border: '1px solid #ff1744',
-          color: '#ff1744',
-          fontFamily: 'Inter, sans-serif',
+          background: 'var(--rl-primary-muted)',
+          border: '1px solid var(--rl-red)',
+          color: 'var(--rl-red)',
+          fontFamily: "'DM Sans', sans-serif",
           fontSize: '13px',
           fontWeight: 600,
           padding: '10px',
@@ -77,10 +77,10 @@ export default function StartStopControls() {
         onClick={handleEmergencyStop}
         style={{
           width: '100%',
-          background: '#ff174411',
-          border: '2px solid #ff1744',
-          color: '#ff1744',
-          fontFamily: 'Inter, sans-serif',
+          background: 'transparent',
+          border: '2px solid var(--rl-red)',
+          color: 'var(--rl-red)',
+          fontFamily: "'DM Sans', sans-serif",
           fontSize: '13px',
           fontWeight: 700,
           padding: '10px',
@@ -88,12 +88,6 @@ export default function StartStopControls() {
           cursor: 'pointer',
           letterSpacing: '0.08em',
           transition: 'background 0.15s',
-        }}
-        onMouseEnter={e => {
-          ;(e.currentTarget as HTMLButtonElement).style.background = '#ff174433'
-        }}
-        onMouseLeave={e => {
-          ;(e.currentTarget as HTMLButtonElement).style.background = '#ff174411'
         }}
       >
         EMERGENCY STOP

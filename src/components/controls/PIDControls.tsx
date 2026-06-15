@@ -11,14 +11,12 @@ export default function PIDControls() {
   const [kd, setKd] = useState<number>(pidParams.kd)
   const [applied, setApplied] = useState(false)
 
-  // Sync when pidParams change externally
   useEffect(() => {
     setKp(pidParams.kp)
     setKi(pidParams.ki)
     setKd(pidParams.kd)
   }, [pidParams.kp, pidParams.ki, pidParams.kd])
 
-  // Only renders when NOT in OPEN_LOOP mode
   if (experimentMode === 'OPEN_LOOP') return null
 
   const handleApply = () => {
@@ -29,9 +27,9 @@ export default function PIDControls() {
 
   const inputStyle: React.CSSProperties = {
     width: '100%',
-    background: '#1a1a1a',
-    border: '1px solid #2a2a2a',
-    color: '#f0f0f0',
+    background: 'var(--rl-input-bg)',
+    border: '1px solid var(--rl-border)',
+    color: 'var(--rl-text)',
     fontFamily: '"Share Tech Mono", monospace',
     fontSize: '13px',
     padding: '6px 8px',
@@ -41,13 +39,22 @@ export default function PIDControls() {
   }
 
   const labelStyle: React.CSSProperties = {
-    fontFamily: 'Rajdhani, sans-serif',
+    fontFamily: "'Rajdhani', sans-serif",
     fontSize: '11px',
-    color: '#888888',
+    fontWeight: 600,
+    color: 'var(--rl-label)',
     textTransform: 'uppercase',
     letterSpacing: '0.08em',
     marginBottom: '3px',
     display: 'block',
+  }
+
+  const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+    e.currentTarget.style.borderColor = 'var(--rl-primary)'
+  }
+
+  const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    e.currentTarget.style.borderColor = 'var(--rl-border)'
   }
 
   return (
@@ -60,6 +67,8 @@ export default function PIDControls() {
           min={0}
           value={kp}
           onChange={e => setKp(Number(e.target.value))}
+          onFocus={handleFocus}
+          onBlur={handleBlur}
           style={inputStyle}
         />
       </div>
@@ -72,6 +81,8 @@ export default function PIDControls() {
           min={0}
           value={ki}
           onChange={e => setKi(Number(e.target.value))}
+          onFocus={handleFocus}
+          onBlur={handleBlur}
           style={inputStyle}
         />
       </div>
@@ -84,6 +95,8 @@ export default function PIDControls() {
           min={0}
           value={kd}
           onChange={e => setKd(Number(e.target.value))}
+          onFocus={handleFocus}
+          onBlur={handleBlur}
           style={inputStyle}
         />
       </div>
@@ -92,16 +105,16 @@ export default function PIDControls() {
         onClick={handleApply}
         style={{
           width: '100%',
-          background: applied ? '#00a846' : '#00c853',
-          color: '#000',
-          fontFamily: 'Inter, sans-serif',
+          background: 'var(--rl-primary)',
+          color: 'var(--rl-primary-fg)',
+          fontFamily: "'DM Sans', sans-serif",
           fontSize: '13px',
           fontWeight: 600,
           padding: '8px',
           borderRadius: '6px',
           border: 'none',
           cursor: 'pointer',
-          transition: 'background 0.2s',
+          transition: 'opacity 0.2s',
           letterSpacing: '0.04em',
         }}
       >

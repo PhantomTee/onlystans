@@ -12,21 +12,21 @@ export default function DirectionToggle() {
   }
 
   const activeStyle: React.CSSProperties = {
-    background: '#00c85322',
-    border: '1px solid #00c853',
-    color: '#00c853',
+    background: 'var(--rl-primary-muted)',
+    border: '1px solid var(--rl-primary)',
+    color: 'var(--rl-primary)',
   }
 
   const inactiveStyle: React.CSSProperties = {
-    background: '#1a1a1a',
-    border: '1px solid #2a2a2a',
-    color: '#666666',
+    background: 'var(--rl-raised)',
+    border: '1px solid var(--rl-border)',
+    color: 'var(--rl-label)',
   }
 
   const baseStyle: React.CSSProperties = {
     width: '50%',
     padding: '8px',
-    fontFamily: 'Inter, sans-serif',
+    fontFamily: "'DM Sans', sans-serif",
     fontSize: '12px',
     fontWeight: 600,
     cursor: 'pointer',
@@ -42,7 +42,7 @@ export default function DirectionToggle() {
           ...baseStyle,
           ...(direction === 'FORWARD' ? activeStyle : inactiveStyle),
           borderRadius: '4px 0 0 4px',
-          borderRight: direction === 'FORWARD' ? '1px solid #00c853' : '1px solid #2a2a2a',
+          borderRight: direction === 'FORWARD' ? '1px solid var(--rl-primary)' : '1px solid var(--rl-border)',
         }}
       >
         ▶ FORWARD
@@ -56,7 +56,7 @@ export default function DirectionToggle() {
           borderLeft: 'none',
         }}
       >
-        BACKWARD ◀
+        ◀ BACKWARD
       </button>
     </div>
   )

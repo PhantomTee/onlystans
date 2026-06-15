@@ -12,7 +12,6 @@ const COLUMNS: { key: keyof DataLogEntry; label: string }[] = [
 
 function formatCell(key: keyof DataLogEntry, value: string | number): string {
   if (key === 'timestamp' && typeof value === 'string') {
-    // Show HH:MM:SS.mmm
     try {
       const d = new Date(value)
       return d.toISOString().slice(11, 23)
@@ -43,9 +42,9 @@ export default function DataLoggerTable() {
       >
         <span
           style={{
-            fontFamily: 'Inter, sans-serif',
+            fontFamily: "'DM Sans', sans-serif",
             fontSize: '13px',
-            color: '#444444',
+            color: 'var(--rl-muted)',
             textAlign: 'center',
           }}
         >
@@ -65,23 +64,23 @@ export default function DataLoggerTable() {
         }}
       >
         <thead>
-          <tr style={{ background: '#1a1a1a', borderBottom: '1px solid #2a2a2a' }}>
+          <tr style={{ background: 'var(--rl-raised)', borderBottom: '1px solid var(--rl-border)' }}>
             {COLUMNS.map(col => (
               <th
                 key={col.key}
                 style={{
-                  fontFamily: 'Rajdhani, sans-serif',
+                  fontFamily: "'Rajdhani', sans-serif",
                   fontSize: '11px',
-                  color: '#888888',
+                  color: 'var(--rl-label)',
                   textTransform: 'uppercase',
                   letterSpacing: '0.06em',
-                  padding: '6px 8px',
+                  padding: '6px 12px',
                   textAlign: 'left',
                   fontWeight: 600,
                   position: 'sticky',
                   top: 0,
-                  background: '#1a1a1a',
-                  borderBottom: '1px solid #2a2a2a',
+                  background: 'var(--rl-raised)',
+                  borderBottom: '1px solid var(--rl-border)',
                 }}
               >
                 {col.label}
@@ -93,7 +92,7 @@ export default function DataLoggerTable() {
           {dataLog.map((entry, i) => (
             <tr
               key={`${entry.timestamp}-${i}`}
-              style={{ background: i % 2 === 0 ? '#141414' : '#0d0d0d' }}
+              style={{ background: i % 2 === 0 ? 'var(--rl-row-odd)' : 'var(--rl-row-even)' }}
             >
               {COLUMNS.map(col => (
                 <td
@@ -101,9 +100,8 @@ export default function DataLoggerTable() {
                   style={{
                     fontFamily: '"Share Tech Mono", monospace',
                     fontSize: '12px',
-                    color: '#f0f0f0',
-                    padding: '5px 8px',
-                    borderBottom: '1px solid #1a1a1a',
+                    color: 'var(--rl-text)',
+                    padding: '6px 12px',
                     whiteSpace: 'nowrap',
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',

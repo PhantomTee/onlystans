@@ -6,25 +6,24 @@ export default function CameraFeed() {
       {MOCK_MODE ? (
         <div
           style={{
-            background: '#0d0d0d',
-            border: '1px solid #2a2a2a',
+            background: 'var(--rl-raised)',
+            border: '1px solid var(--rl-border)',
             borderRadius: '8px',
             width: '100%',
-            height: '180px',
+            height: '160px',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
-            gap: '10px',
           }}
         >
           {/* Camera-off SVG icon */}
           <svg
-            width="36"
-            height="36"
+            width="32"
+            height="32"
             viewBox="0 0 24 24"
             fill="none"
-            stroke="#333333"
+            stroke="var(--rl-border)"
             strokeWidth="1.5"
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -36,10 +35,11 @@ export default function CameraFeed() {
 
           <span
             style={{
-              fontFamily: 'Inter, sans-serif',
-              fontSize: '12px',
-              color: '#444444',
+              fontFamily: "'DM Sans', sans-serif",
+              fontSize: '11px',
+              color: 'var(--rl-label)',
               textAlign: 'center',
+              marginTop: '8px',
               padding: '0 16px',
             }}
           >
@@ -47,21 +47,11 @@ export default function CameraFeed() {
           </span>
         </div>
       ) : (
-        <div
-          style={{
-            width: '100%',
-            height: '180px',
-            borderRadius: '8px',
-            overflow: 'hidden',
-            background: '#0d0d0d',
-          }}
-        >
-          <img
-            src={import.meta.env.VITE_ESP32_CAM_URL}
-            alt="Motor Camera"
-            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-          />
-        </div>
+        <img
+          src={import.meta.env.VITE_ESP32_CAM_URL}
+          alt="Motor Camera"
+          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+        />
       )}
     </div>
   )

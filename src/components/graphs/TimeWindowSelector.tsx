@@ -1,20 +1,10 @@
-interface TimeWindowOption {
-  label: string
-  value: number
-}
-
-const OPTIONS: TimeWindowOption[] = [
+const OPTIONS = [
   { label: '30s', value: 30 },
   { label: '1min', value: 60 },
   { label: '5min', value: 300 },
 ]
 
-interface TimeWindowSelectorProps {
-  value: number
-  onChange: (v: number) => void
-}
-
-export function TimeWindowSelector({ value, onChange }: TimeWindowSelectorProps) {
+export function TimeWindowSelector({ value, onChange }: { value: number; onChange: (v: number) => void }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'row', gap: '4px' }}>
       {OPTIONS.map(opt => {
@@ -24,14 +14,14 @@ export function TimeWindowSelector({ value, onChange }: TimeWindowSelectorProps)
             key={opt.value}
             onClick={() => onChange(opt.value)}
             style={{
-              fontFamily: 'Inter, sans-serif',
+              fontFamily: "'DM Sans', sans-serif",
               fontSize: '11px',
               fontWeight: active ? 600 : 400,
               padding: '3px 8px',
-              borderRadius: '4px',
-              border: `1px solid ${active ? '#00c853' : '#2a2a2a'}`,
-              backgroundColor: active ? '#00c85322' : '#1a1a1a',
-              color: active ? '#00c853' : '#666666',
+              borderRadius: '9999px',
+              border: `1px solid ${active ? 'var(--rl-primary)' : 'var(--rl-border)'}`,
+              backgroundColor: active ? 'var(--rl-primary-muted)' : 'var(--rl-raised)',
+              color: active ? 'var(--rl-primary)' : 'var(--rl-label)',
               cursor: 'pointer',
               outline: 'none',
               transition: 'all 0.15s ease',

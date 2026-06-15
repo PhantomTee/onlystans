@@ -5,17 +5,15 @@ export function RPMDisplay() {
   const { currentRPM, targetRPM, motorStatus } = hardware
 
   const isRunning = motorStatus === 'RUNNING'
-  const rpmColor = isRunning ? '#00c853' : '#444444'
   const showDash = currentRPM === 0 && motorStatus !== 'RUNNING'
 
   return (
     <div style={{ padding: '12px', textAlign: 'center' }}>
-      {/* Large RPM value */}
       <div
         style={{
           fontFamily: '"Share Tech Mono", monospace',
           fontSize: '42px',
-          color: rpmColor,
+          color: isRunning ? 'var(--rl-green)' : 'var(--rl-border)',
           lineHeight: 1,
           letterSpacing: '-0.01em',
         }}
@@ -23,13 +21,12 @@ export function RPMDisplay() {
         {showDash ? '—' : currentRPM}
       </div>
 
-      {/* RPM label */}
       <div
         style={{
-          fontFamily: 'Rajdhani, sans-serif',
+          fontFamily: "'Rajdhani', sans-serif",
           fontSize: '11px',
           fontWeight: 600,
-          color: '#888888',
+          color: 'var(--rl-label)',
           letterSpacing: '0.1em',
           textTransform: 'uppercase',
           marginTop: '4px',
@@ -38,7 +35,6 @@ export function RPMDisplay() {
         RPM
       </div>
 
-      {/* Target RPM line */}
       <div
         style={{
           display: 'flex',
@@ -50,10 +46,10 @@ export function RPMDisplay() {
       >
         <span
           style={{
-            fontFamily: 'Rajdhani, sans-serif',
-            fontSize: '11px',
+            fontFamily: "'Rajdhani', sans-serif",
+            fontSize: '10px',
             fontWeight: 600,
-            color: '#666666',
+            color: 'var(--rl-label)',
             letterSpacing: '0.08em',
             textTransform: 'uppercase',
           }}
@@ -64,7 +60,7 @@ export function RPMDisplay() {
           style={{
             fontFamily: '"Share Tech Mono", monospace',
             fontSize: '14px',
-            color: '#ffab00',
+            color: 'var(--rl-amber)',
           }}
         >
           {targetRPM}

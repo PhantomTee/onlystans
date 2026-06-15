@@ -5,14 +5,13 @@ import type { ExperimentMode } from '../../context/types'
 interface ModeOption {
   label: string
   mode: ExperimentMode
-  controlMode: string
 }
 
 const MODE_OPTIONS: ModeOption[] = [
-  { label: 'Open Loop', mode: 'OPEN_LOOP', controlMode: 'OPEN_LOOP' },
-  { label: 'Closed Loop PID', mode: 'CLOSED_LOOP_PID', controlMode: 'CLOSED_LOOP' },
-  { label: 'Step Response', mode: 'STEP_RESPONSE', controlMode: 'CLOSED_LOOP' },
-  { label: 'Speed Regulation', mode: 'SPEED_REGULATION', controlMode: 'CLOSED_LOOP' },
+  { label: 'Open Loop', mode: 'OPEN_LOOP' },
+  { label: 'Closed Loop PID', mode: 'CLOSED_LOOP_PID' },
+  { label: 'Step Response', mode: 'STEP_RESPONSE' },
+  { label: 'Speed Regulation', mode: 'SPEED_REGULATION' },
 ]
 
 export default function ModeSelector() {
@@ -42,16 +41,16 @@ export default function ModeSelector() {
               key={mode}
               onClick={() => handleModeSelect(mode)}
               style={{
-                fontFamily: 'Inter, sans-serif',
+                fontFamily: "'DM Sans', sans-serif",
                 fontSize: '11px',
                 fontWeight: 600,
                 padding: '6px 4px',
                 borderRadius: '4px',
                 cursor: isDisconnected ? 'not-allowed' : 'pointer',
                 transition: 'all 0.15s',
-                border: isActive ? '1px solid #00c853' : '1px solid #2a2a2a',
-                background: isActive ? '#00c85322' : '#1a1a1a',
-                color: isActive ? '#00c853' : '#888888',
+                border: isActive ? '1px solid var(--rl-primary)' : '1px solid var(--rl-border)',
+                background: isActive ? 'var(--rl-primary-muted)' : 'var(--rl-raised)',
+                color: isActive ? 'var(--rl-primary)' : 'var(--rl-label)',
                 letterSpacing: '0.02em',
                 lineHeight: 1.3,
                 textAlign: 'center',
@@ -67,13 +66,13 @@ export default function ModeSelector() {
         <p
           style={{
             marginTop: '6px',
-            fontFamily: 'Inter, sans-serif',
+            fontFamily: "'DM Sans', sans-serif",
             fontSize: '11px',
-            color: '#ffab00',
+            color: 'var(--rl-amber)',
             textAlign: 'center',
           }}
         >
-          Not connected
+          ⚠ Not connected
         </p>
       )}
     </div>

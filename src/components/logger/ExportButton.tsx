@@ -19,10 +19,10 @@ export default function ExportButton() {
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{
-        background: '#1a1a1a',
-        border: `1px solid ${hovered && !isEmpty ? '#00c853' : '#2a2a2a'}`,
-        color: hovered && !isEmpty ? '#00c853' : '#888888',
-        fontFamily: 'Inter, sans-serif',
+        background: 'var(--rl-btn-bg)',
+        border: `1px solid ${hovered && !isEmpty ? 'var(--rl-primary)' : 'var(--rl-btn-border)'}`,
+        color: hovered && !isEmpty ? 'var(--rl-primary)' : 'var(--rl-btn-color)',
+        fontFamily: "'DM Sans', sans-serif",
         fontSize: '12px',
         padding: '6px 14px',
         borderRadius: '4px',

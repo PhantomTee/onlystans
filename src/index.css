@@ -2,6 +2,59 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ─── Dark mode (default — violet-inspired instrument panel) ─────────────── */
+:root, [data-theme="dark"] {
+  --rl-bg:              #0d0a1a;
+  --rl-surface:         #16112a;
+  --rl-raised:          #1e1838;
+  --rl-border:          #2e2454;
+  --rl-text:            #f0ecff;
+  --rl-text-sub:        #c4b8e8;
+  --rl-muted:           #7B6DAA;
+  --rl-label:           #5a5080;
+  --rl-primary:         #7C3AED;
+  --rl-primary-fg:      #ffffff;
+  --rl-primary-muted:   rgba(124,58,237,0.15);
+  --rl-green:           #00c853;
+  --rl-amber:           #ffab00;
+  --rl-red:             #ff1744;
+  --rl-handle:          #2e2454;
+  --rl-handle-hover:    #7C3AED;
+  --rl-input-bg:        #1e1838;
+  --rl-btn-bg:          #1e1838;
+  --rl-btn-border:      #2e2454;
+  --rl-btn-color:       #7B6DAA;
+  --rl-row-odd:         #16112a;
+  --rl-row-even:        #0d0a1a;
+}
+
+/* ─── Light mode (AcademIQ lavender/violet palette) ─────────────────────── */
+[data-theme="light"] {
+  --rl-bg:              #f0edf9;
+  --rl-surface:         #ffffff;
+  --rl-raised:          #f8f5fe;
+  --rl-border:          #e5dff5;
+  --rl-text:            #1a1233;
+  --rl-text-sub:        #4a4168;
+  --rl-muted:           #9990b0;
+  --rl-label:           #7B6DAA;
+  --rl-primary:         #6D28D9;
+  --rl-primary-fg:      #ffffff;
+  --rl-primary-muted:   #ede8f9;
+  --rl-green:           #16a34a;
+  --rl-amber:           #d97706;
+  --rl-red:             #dc2626;
+  --rl-handle:          #e5dff5;
+  --rl-handle-hover:    #6D28D9;
+  --rl-input-bg:        #f8f5fe;
+  --rl-btn-bg:          #f8f5fe;
+  --rl-btn-border:      #e5dff5;
+  --rl-btn-color:       #7B6DAA;
+  --rl-row-odd:         #ffffff;
+  --rl-row-even:        #f8f5fe;
+}
+
+/* ─── Base reset ──────────────────────────────────────────────────────────── */
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
@@ -12,69 +65,72 @@ html, body, #root {
   width: 100%;
   height: 100%;
   overflow: hidden;
-  background-color: #0d0d0d;
-  color: #f0f0f0;
-  font-family: 'Inter', sans-serif;
+  background-color: var(--rl-bg);
+  color: var(--rl-text);
+  font-family: 'DM Sans', 'Inter', system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.2s, color 0.2s;
 }
 
-/* Range input styling */
+/* ─── Range inputs ─────────────────────────────────────────────────────────── */
 input[type="range"] {
   -webkit-appearance: none;
   appearance: none;
   width: 100%;
   height: 4px;
-  background: #2a2a2a;
+  background: var(--rl-border);
   border-radius: 2px;
   outline: none;
 }
-
 input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
-  appearance: none;
   width: 14px;
   height: 14px;
   border-radius: 50%;
-  background: #ffab00;
+  background: var(--rl-primary);
   cursor: pointer;
 }
-
 input[type="range"]::-moz-range-thumb {
   width: 14px;
   height: 14px;
   border-radius: 50%;
-  background: #ffab00;
+  background: var(--rl-primary);
   cursor: pointer;
   border: none;
 }
 
-/* Scrollbar styling */
-::-webkit-scrollbar {
-  width: 4px;
-  height: 4px;
-}
+/* ─── Scrollbar ────────────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: var(--rl-bg); }
+::-webkit-scrollbar-thumb { background: var(--rl-border); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: var(--rl-muted); }
 
-::-webkit-scrollbar-track {
-  background: #0d0d0d;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #2a2a2a;
-  border-radius: 2px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #3a3a3a;
-}
-
-/* Number input styling */
-input[type="number"] {
-  -moz-appearance: textfield;
-}
-
+/* ─── Number inputs ────────────────────────────────────────────────────────── */
+input[type="number"] { -moz-appearance: textfield; }
 input[type="number"]::-webkit-inner-spin-button,
-input[type="number"]::-webkit-outer-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
+input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+
+/* ─── Drag handle ──────────────────────────────────────────────────────────── */
+.drag-handle {
+  width: 5px;
+  flex-shrink: 0;
+  cursor: col-resize;
+  background: var(--rl-handle);
+  transition: background 0.15s;
+  position: relative;
+}
+.drag-handle:hover,
+.drag-handle.dragging { background: var(--rl-handle-hover); }
+.drag-handle::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 1px;
+  height: 32px;
+  background: currentColor;
+  opacity: 0.4;
+  border-radius: 1px;
 }

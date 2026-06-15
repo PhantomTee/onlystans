@@ -1,4 +1,6 @@
+import { useRef, useState, useCallback } from 'react'
 import { HardwareProvider } from './context/HardwareContext'
+import { ThemeProvider } from './context/ThemeContext'
 import { StatusBar } from './components/layout/StatusBar'
 import { PanelWrapper } from './components/layout/PanelWrapper'
 import { SectionLabel } from './components/layout/SectionLabel'
@@ -19,121 +21,223 @@ import PWMSlider from './components/controls/PWMSlider'
 import PIDControls from './components/controls/PIDControls'
 import DataLoggerTable from './components/logger/DataLoggerTable'
 import ExportButton from './components/logger/ExportButton'
+import type { ShaftAttachment } from './components/motor/MotorModel3D'
 
-function Dashboard() {
+// ── Resizable three-column layout ─────────────────────────────────────────────
+function ResizableLayout({
+  left,
+  center,
+  right,
+}: {
+  left: React.ReactNode
+  center: React.ReactNode
+  right: React.ReactNode
+}) {
+  const [leftW, setLeftW] = useState(240)
+  const [rightW, setRightW] = useState(268)
+  const dragging = useRef<null | 'left' | 'right'>(null)
+  const startX = useRef(0)
+  const startW = useRef(0)
+
+  const onMouseDown = useCallback((side: 'left' | 'right', e: React.MouseEvent) => {
+    e.preventDefault()
+    dragging.current = side
+    startX.current = e.clientX
+    startW.current = side === 'left' ? leftW : rightW
+
+    const onMove = (ev: MouseEvent) => {
+      const delta = ev.clientX - startX.current
+      if (dragging.current === 'left') {
+        setLeftW(Math.max(180, Math.min(420, startW.current + delta)))
+      } else {
+        setRightW(Math.max(180, Math.min(420, startW.current - delta)))
+      }
+    }
+    const onUp = () => {
+      dragging.current = null
+      window.removeEventListener('mousemove', onMove)
+      window.removeEventListener('mouseup', onUp)
+    }
+    window.addEventListener('mousemove', onMove)
+    window.addEventListener('mouseup', onUp)
+  }, [leftW, rightW])
+
   return (
-    <div
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        width: '100vw',
-        height: '100vh',
-        overflow: 'hidden',
-        backgroundColor: '#0d0d0d',
-      }}
-    >
+    <div style={{ display: 'flex', flex: 1, overflow: 'hidden', minHeight: 0 }}>
+      {/* Left column */}
+      <div style={{ width: leftW, flexShrink: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column', padding: '0 0 8px 8px', gap: 8 }}>
+        {left}
+      </div>
+
+      {/* Left drag handle */}
+      <div
+        className="drag-handle"
+        onMouseDown={(e) => onMouseDown('left', e)}
+        style={{ margin: '8px 0' }}
+      />
+
+      {/* Center column */}
+      <div style={{ flex: 1, overflow: 'hidden', minWidth: 320, display: 'flex', flexDirection: 'column', padding: '0 0 8px 8px', gap: 8 }}>
+        {center}
+      </div>
+
+      {/* Right drag handle */}
+      <div
+        className="drag-handle"
+        onMouseDown={(e) => onMouseDown('right', e)}
+        style={{ margin: '8px 0' }}
+      />
+
+      {/* Right column */}
+      <div style={{ width: rightW, flexShrink: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column', padding: '0 8px 8px 8px', gap: 8 }}>
+        {right}
+      </div>
+    </div>
+  )
+}
+
+// ── Main dashboard ─────────────────────────────────────────────────────────────
+function Dashboard() {
+  const [attachment, setAttachment] = useState<ShaftAttachment>('fan')
+
+  const ATTACHMENTS: { id: ShaftAttachment; label: string }[] = [
+    { id: 'fan',       label: 'Fan' },
+    { id: 'propeller', label: 'Propeller' },
+    { id: 'flywheel',  label: 'Flywheel' },
+    { id: 'grinding',  label: 'Grinder' },
+    { id: 'impeller',  label: 'Impeller' },
+  ]
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', width: '100vw', height: '100vh', overflow: 'hidden', backgroundColor: 'var(--rl-bg)', transition: 'background-color 0.2s' }}>
       <StatusBar />
 
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: '260px 1fr 260px',
-          gap: '8px',
-          padding: '8px',
-          flex: 1,
-          overflow: 'hidden',
-          minHeight: 0,
-        }}
-      >
-        {/* LEFT PANEL */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', minHeight: 0 }}>
-          <PanelWrapper title="Motor Model">
-            <MotorModel3D />
-            <div style={{ padding: '8px 12px', borderTop: '1px solid #2a2a2a' }}>
-              <MotorStatus />
-            </div>
-          </PanelWrapper>
-
-          <PanelWrapper title="Camera Feed" style={{ flex: 1 }}>
-            <CameraFeed />
-          </PanelWrapper>
-        </div>
-
-        {/* CENTRE PANEL */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', minHeight: 0, overflow: 'hidden' }}>
-          <PanelWrapper>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr' }}>
-              <div style={{ borderRight: '1px solid #2a2a2a' }}>
-                <RPMDisplay />
+      <ResizableLayout
+        left={
+          <>
+            {/* Controls */}
+            <PanelWrapper title="Controls" style={{ flex: 1 }}>
+              <div style={{ padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <div>
+                  <SectionLabel>Motor</SectionLabel>
+                  <StartStopControls />
+                </div>
+                <div>
+                  <SectionLabel>Direction</SectionLabel>
+                  <DirectionToggle />
+                </div>
+                <div>
+                  <SectionLabel>Mode</SectionLabel>
+                  <ModeSelector />
+                </div>
+                <div>
+                  <RPMSlider />
+                  <PWMSlider />
+                </div>
               </div>
-              <div style={{ borderRight: '1px solid #2a2a2a' }}>
-                <PWMDisplay />
-              </div>
-              <div>
-                <ErrorDisplay />
-              </div>
-            </div>
-          </PanelWrapper>
+            </PanelWrapper>
 
-          <PanelWrapper title="Live Graphs" style={{ flex: 1, overflow: 'hidden' }}>
-            <div style={{ padding: '8px 12px', display: 'flex', flexDirection: 'column', gap: '8px', height: '100%', overflow: 'hidden' }}>
-              <RPMGraph />
-              <PWMGraph />
-              <ErrorGraph />
-            </div>
-          </PanelWrapper>
-
-          <PanelWrapper title="Data Logger" style={{ maxHeight: '180px' }}>
-            <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '6px 12px', borderBottom: '1px solid #2a2a2a' }}>
-              <ExportButton />
-            </div>
-            <div style={{ maxHeight: '120px', overflow: 'auto' }}>
-              <DataLoggerTable />
-            </div>
-          </PanelWrapper>
-        </div>
-
-        {/* RIGHT PANEL */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', minHeight: 0, overflowY: 'auto' }}>
-          <PanelWrapper title="Controls">
-            <div style={{ padding: '12px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <div>
-                <SectionLabel>Motor</SectionLabel>
-                <StartStopControls />
-              </div>
-
-              <div>
-                <SectionLabel>Direction</SectionLabel>
-                <DirectionToggle />
-              </div>
-
-              <div>
-                <SectionLabel>Experiment Mode</SectionLabel>
-                <ModeSelector />
+            {/* Camera */}
+            <PanelWrapper title="Camera Feed" style={{ flexShrink: 0 }}>
+              <CameraFeed />
+            </PanelWrapper>
+          </>
+        }
+        center={
+          <>
+            {/* Motor model — centre stage */}
+            <PanelWrapper>
+              {/* Shaft attachment selector */}
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                padding: '8px 12px',
+                borderBottom: '1px solid var(--rl-border)',
+                flexWrap: 'wrap',
+              }}>
+                <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 11, fontWeight: 600, color: 'var(--rl-label)', letterSpacing: '0.08em', textTransform: 'uppercase', marginRight: 4 }}>
+                  Shaft
+                </span>
+                {ATTACHMENTS.map(({ id, label }) => (
+                  <button
+                    key={id}
+                    onClick={() => setAttachment(id)}
+                    style={{
+                      fontFamily: "'DM Sans', Inter, sans-serif",
+                      fontSize: 11,
+                      fontWeight: 600,
+                      padding: '3px 10px',
+                      borderRadius: 9999,
+                      cursor: 'pointer',
+                      border: attachment === id ? '1px solid var(--rl-primary)' : '1px solid var(--rl-border)',
+                      background: attachment === id ? 'var(--rl-primary-muted)' : 'var(--rl-raised)',
+                      color: attachment === id ? 'var(--rl-primary)' : 'var(--rl-label)',
+                      transition: 'all 0.15s',
+                    }}
+                  >
+                    {label}
+                  </button>
+                ))}
+                <div style={{ marginLeft: 'auto' }}>
+                  <MotorStatus />
+                </div>
               </div>
 
-              <div>
-                <RPMSlider />
-                <PWMSlider />
-              </div>
-            </div>
-          </PanelWrapper>
+              {/* 3D canvas */}
+              <MotorModel3D attachment={attachment} />
+            </PanelWrapper>
 
-          <PanelWrapper title="PID Tuning">
-            <div style={{ padding: '12px' }}>
-              <PIDControls />
-            </div>
-          </PanelWrapper>
-        </div>
-      </div>
+            {/* Live displays */}
+            <PanelWrapper>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr' }}>
+                <div style={{ borderRight: '1px solid var(--rl-border)' }}><RPMDisplay /></div>
+                <div style={{ borderRight: '1px solid var(--rl-border)' }}><PWMDisplay /></div>
+                <div><ErrorDisplay /></div>
+              </div>
+            </PanelWrapper>
+
+            {/* Graphs */}
+            <PanelWrapper title="Live Graphs" style={{ flex: 1, overflow: 'hidden' }}>
+              <div style={{ padding: '8px 12px', display: 'flex', flexDirection: 'column', gap: 8, height: '100%', overflow: 'hidden' }}>
+                <RPMGraph />
+                <PWMGraph />
+                <ErrorGraph />
+              </div>
+            </PanelWrapper>
+          </>
+        }
+        right={
+          <>
+            {/* PID */}
+            <PanelWrapper title="PID Tuning">
+              <div style={{ padding: 12 }}>
+                <PIDControls />
+              </div>
+            </PanelWrapper>
+
+            {/* Data logger */}
+            <PanelWrapper title="Data Logger" style={{ flex: 1, overflow: 'hidden' }}>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '6px 12px', borderBottom: '1px solid var(--rl-border)' }}>
+                <ExportButton />
+              </div>
+              <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
+                <DataLoggerTable />
+              </div>
+            </PanelWrapper>
+          </>
+        }
+      />
     </div>
   )
 }
 
 export default function App() {
   return (
-    <HardwareProvider>
-      <Dashboard />
-    </HardwareProvider>
+    <ThemeProvider>
+      <HardwareProvider>
+        <Dashboard />
+      </HardwareProvider>
+    </ThemeProvider>
   )
 }

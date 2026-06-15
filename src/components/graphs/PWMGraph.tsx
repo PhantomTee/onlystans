@@ -12,6 +12,7 @@ import {
 } from 'chart.js'
 import { Line } from 'react-chartjs-2'
 import { useHardware } from '../../context/HardwareContext'
+import { useTheme } from '../../context/ThemeContext'
 import { SectionLabel } from '../layout/SectionLabel'
 import { TimeWindowSelector } from './TimeWindowSelector'
 
@@ -28,12 +29,12 @@ Chart.register(
 
 export function PWMGraph() {
   const { graphState } = useHardware()
+  const { chart } = useTheme()
   const [timeWindow, setTimeWindow] = useState(60)
 
   const pwmData = graphState.pwm
   const isEmpty = pwmData.length === 0
 
-  // Filter to only points within timeWindow seconds of the latest point
   const latestTime = pwmData.length > 0 ? pwmData[pwmData.length - 1].time : 0
   const cutoff = latestTime - timeWindow * 1000
   const filtered = pwmData.filter(p => p.time >= cutoff)
@@ -52,7 +53,7 @@ export function PWMGraph() {
       {
         label: 'PWM',
         data: pwmValues,
-        borderColor: '#ffab00',
+        borderColor: chart.pwm,
         backgroundColor: 'transparent',
         tension: 0.3,
         pointRadius: 0,
@@ -72,23 +73,23 @@ export function PWMGraph() {
     scales: {
       x: {
         ticks: {
-          color: '#666666',
+          color: chart.tick,
           font: { family: '"Share Tech Mono", monospace', size: 10 },
           maxTicksLimit: 6,
           maxRotation: 0,
         },
-        grid: { color: '#2a2a2a' },
-        border: { color: '#2a2a2a' },
+        grid: { color: chart.grid },
+        border: { color: chart.grid },
       },
       y: {
         min: 0,
         max: 255,
         ticks: {
-          color: '#666666',
+          color: chart.tick,
           font: { family: '"Share Tech Mono", monospace', size: 10 },
         },
-        grid: { color: '#2a2a2a' },
-        border: { color: '#2a2a2a' },
+        grid: { color: chart.grid },
+        border: { color: chart.grid },
       },
     },
   }
@@ -106,7 +107,7 @@ export function PWMGraph() {
         <SectionLabel>PWM OUTPUT</SectionLabel>
         <TimeWindowSelector value={timeWindow} onChange={setTimeWindow} />
       </div>
-      <div style={{ position: 'relative', height: '100px' }}>
+      <div style={{ position: 'relative', height: '90px' }}>
         {isEmpty ? (
           <div
             style={{
@@ -115,8 +116,9 @@ export function PWMGraph() {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: '#444444',
-              fontFamily: 'Inter, sans-serif',
+              background: 'transparent',
+              color: 'var(--rl-muted)',
+              fontFamily: "'DM Sans', sans-serif",
               fontSize: '12px',
             }}
           >

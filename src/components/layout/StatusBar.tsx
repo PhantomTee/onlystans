@@ -1,4 +1,5 @@
 import { useHardware } from '../../context/HardwareContext'
+import { useTheme } from '../../context/ThemeContext'
 import { MOCK_MODE } from '../../config'
 import type { ConnectionStatus, MotorStatus } from '../../context/types'
 
@@ -6,14 +7,14 @@ function getStatusColor(status: ConnectionStatus | MotorStatus): string {
   switch (status) {
     case 'CONNECTED':
     case 'RUNNING':
-      return '#22c55e'
+      return 'var(--rl-green)'
     case 'RECONNECTING':
-      return '#f59e0b'
+      return 'var(--rl-amber)'
     case 'DISCONNECTED':
     case 'STOPPED':
     case 'ERROR':
     default:
-      return '#ef4444'
+      return 'var(--rl-red)'
   }
 }
 
@@ -40,12 +41,12 @@ function StatusIndicator({ label, status, text }: StatusIndicatorProps) {
       <span
         style={{
           fontFamily: '"DM Sans", Inter, sans-serif',
-          fontSize: '12px',
+          fontSize: '11px',
           userSelect: 'none',
           lineHeight: 1,
         }}
       >
-        <span style={{ color: '#7B7096' }}>{label}: </span>
+        <span style={{ color: 'var(--rl-label)' }}>{label}: </span>
         <span style={{ color, fontWeight: 500 }}>{text}</span>
       </span>
     </div>
@@ -55,6 +56,7 @@ function StatusIndicator({ label, status, text }: StatusIndicatorProps) {
 export function StatusBar() {
   const { hardware } = useHardware()
   const { wsStatus, motorStatus, cameraStatus } = hardware
+  const { isDark, toggleTheme } = useTheme()
 
   return (
     <div
@@ -67,15 +69,15 @@ export function StatusBar() {
         height: '52px',
         paddingLeft: '16px',
         paddingRight: '16px',
-        backgroundColor: '#f8f5fe',
-        borderBottom: '1px solid #e5dff5',
+        backgroundColor: 'var(--rl-surface)',
+        borderBottom: '1px solid var(--rl-border)',
         boxSizing: 'border-box',
         flexShrink: 0,
+        transition: 'background-color 0.2s',
       }}
     >
       {/* Left: logo badge + wordmark + subtitle */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-        {/* Hexagon-style badge */}
         <div
           style={{
             width: '20px',
@@ -95,14 +97,10 @@ export function StatusBar() {
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
           >
-            <path
-              d="M13 2L4.5 13.5H11L9 22L19.5 10.5H13L13 2"
-              fill="white"
-            />
+            <path d="M13 3L4 14h7l-2 9 11-13h-7l2-7z" fill="white" />
           </svg>
         </div>
 
-        {/* Text stack */}
         <div
           style={{
             display: 'flex',
@@ -116,7 +114,7 @@ export function StatusBar() {
               fontFamily: '"DM Serif Display", Georgia, serif',
               fontSize: '20px',
               fontWeight: 700,
-              color: '#1a1233',
+              color: 'var(--rl-text)',
               lineHeight: 1,
               userSelect: 'none',
             }}
@@ -127,7 +125,7 @@ export function StatusBar() {
             style={{
               fontFamily: '"DM Sans", Inter, sans-serif',
               fontSize: '10px',
-              color: '#7B7096',
+              color: 'var(--rl-muted)',
               lineHeight: 1,
               userSelect: 'none',
             }}
@@ -144,7 +142,7 @@ export function StatusBar() {
         <StatusIndicator label="Camera" status={cameraStatus} text={cameraStatus} />
       </div>
 
-      {/* Right: mock pill + separator + IoT Lab badge */}
+      {/* Right: mock pill + IoT Lab badge + theme toggle */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
         {MOCK_MODE && (
           <div
@@ -153,9 +151,9 @@ export function StatusBar() {
               alignItems: 'center',
               padding: '2px 10px',
               borderRadius: '9999px',
-              backgroundColor: '#ede8f9',
-              border: '1px solid #6D28D9',
-              color: '#6D28D9',
+              backgroundColor: 'var(--rl-primary-muted)',
+              border: '1px solid var(--rl-primary)',
+              color: 'var(--rl-primary)',
               fontFamily: '"DM Sans", Inter, sans-serif',
               fontSize: '11px',
               fontWeight: 600,
@@ -167,17 +165,6 @@ export function StatusBar() {
           </div>
         )}
 
-        {/* Separator */}
-        <div
-          style={{
-            width: '1px',
-            height: '20px',
-            backgroundColor: '#e5dff5',
-            flexShrink: 0,
-          }}
-        />
-
-        {/* IoT Lab badge */}
         <div
           style={{
             display: 'inline-flex',
@@ -195,6 +182,24 @@ export function StatusBar() {
         >
           IoT Lab
         </div>
+
+        <button
+          onClick={toggleTheme}
+          style={{
+            background: 'var(--rl-raised)',
+            border: '1px solid var(--rl-border)',
+            color: 'var(--rl-muted)',
+            borderRadius: '9999px',
+            padding: '4px 12px',
+            fontFamily: '"DM Sans", Inter, sans-serif',
+            fontSize: '11px',
+            fontWeight: 600,
+            cursor: 'pointer',
+            userSelect: 'none',
+          }}
+        >
+          {isDark ? '☀ Light' : '☾ Dark'}
+        </button>
       </div>
     </div>
   )

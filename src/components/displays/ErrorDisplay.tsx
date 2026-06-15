@@ -5,19 +5,8 @@ export function ErrorDisplay() {
   const { pidError, motorStatus } = hardware
 
   const motorStopped = motorStatus !== 'RUNNING'
+  const isLargeNegative = pidError < -5
 
-  // Determine color:
-  // pidError < -5  → overshooting → danger red
-  // pidError > 5   → under speed, catching up → green
-  // |pidError| <= 5 → within tolerance → green
-  let errorColor: string
-  if (pidError < -5) {
-    errorColor = '#ff1744'
-  } else {
-    errorColor = '#00c853'
-  }
-
-  // Determine display text
   let displayText: string
   if (motorStopped) {
     displayText = '—'
@@ -27,14 +16,19 @@ export function ErrorDisplay() {
     displayText = String(pidError)
   }
 
+  const color = motorStopped
+    ? 'var(--rl-muted)'
+    : isLargeNegative
+    ? 'var(--rl-red)'
+    : 'var(--rl-green)'
+
   return (
     <div style={{ padding: '12px', textAlign: 'center' }}>
-      {/* Large PID error value */}
       <div
         style={{
           fontFamily: '"Share Tech Mono", monospace',
           fontSize: '42px',
-          color: motorStopped ? '#444444' : errorColor,
+          color,
           lineHeight: 1,
           letterSpacing: '-0.01em',
         }}
@@ -42,13 +36,12 @@ export function ErrorDisplay() {
         {displayText}
       </div>
 
-      {/* PID ERROR label */}
       <div
         style={{
-          fontFamily: 'Rajdhani, sans-serif',
+          fontFamily: "'Rajdhani', sans-serif",
           fontSize: '11px',
           fontWeight: 600,
-          color: '#888888',
+          color: 'var(--rl-label)',
           letterSpacing: '0.1em',
           textTransform: 'uppercase',
           marginTop: '4px',

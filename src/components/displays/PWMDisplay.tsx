@@ -9,12 +9,11 @@ export function PWMDisplay() {
 
   return (
     <div style={{ padding: '12px', textAlign: 'center' }}>
-      {/* Large PWM value */}
       <div
         style={{
           fontFamily: '"Share Tech Mono", monospace',
           fontSize: '42px',
-          color: '#ffab00',
+          color: 'var(--rl-amber)',
           lineHeight: 1,
           letterSpacing: '-0.01em',
         }}
@@ -22,13 +21,12 @@ export function PWMDisplay() {
         {displayPWM}
       </div>
 
-      {/* PWM OUTPUT label */}
       <div
         style={{
-          fontFamily: 'Rajdhani, sans-serif',
+          fontFamily: "'Rajdhani', sans-serif",
           fontSize: '11px',
           fontWeight: 600,
-          color: '#888888',
+          color: 'var(--rl-label)',
           letterSpacing: '0.1em',
           textTransform: 'uppercase',
           marginTop: '4px',
@@ -37,14 +35,13 @@ export function PWMDisplay() {
         PWM OUTPUT
       </div>
 
-      {/* PWM bar */}
       <div
         style={{
           marginTop: '8px',
           width: '100%',
           height: '3px',
           borderRadius: '2px',
-          backgroundColor: '#2a2a2a',
+          backgroundColor: 'var(--rl-border)',
           overflow: 'hidden',
         }}
       >
@@ -53,7 +50,7 @@ export function PWMDisplay() {
             height: '100%',
             width: `${pwmPercent}%`,
             borderRadius: '2px',
-            backgroundColor: '#ffab00',
+            backgroundColor: 'var(--rl-amber)',
             transition: 'width 0.2s ease',
           }}
         />

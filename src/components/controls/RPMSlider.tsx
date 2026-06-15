@@ -8,12 +8,10 @@ export default function RPMSlider() {
 
   const [localValue, setLocalValue] = useState<number>(targetRPM)
 
-  // Sync local value when targetRPM changes externally
   useEffect(() => {
     setLocalValue(targetRPM)
   }, [targetRPM])
 
-  // Only render when NOT in OPEN_LOOP mode
   if (experimentMode === 'OPEN_LOOP') return null
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -29,9 +27,10 @@ export default function RPMSlider() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
         <span
           style={{
-            fontFamily: 'Rajdhani, sans-serif',
+            fontFamily: "'Rajdhani', sans-serif",
             fontSize: '11px',
-            color: '#888888',
+            fontWeight: 600,
+            color: 'var(--rl-label)',
             textTransform: 'uppercase',
             letterSpacing: '0.08em',
           }}
@@ -42,7 +41,7 @@ export default function RPMSlider() {
           style={{
             fontFamily: '"Share Tech Mono", monospace',
             fontSize: '16px',
-            color: '#ffab00',
+            color: 'var(--rl-primary)',
           }}
         >
           {localValue}
@@ -60,14 +59,14 @@ export default function RPMSlider() {
         onTouchEnd={handleCommit}
         style={{
           width: '100%',
-          accentColor: '#ffab00',
+          accentColor: 'var(--rl-primary)',
           cursor: 'pointer',
         }}
       />
 
       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-        <span style={{ fontFamily: '"Share Tech Mono", monospace', fontSize: '10px', color: '#444444' }}>0</span>
-        <span style={{ fontFamily: '"Share Tech Mono", monospace', fontSize: '10px', color: '#444444' }}>3000</span>
+        <span style={{ fontFamily: '"Share Tech Mono", monospace', fontSize: '10px', color: 'var(--rl-muted)' }}>0</span>
+        <span style={{ fontFamily: '"Share Tech Mono", monospace', fontSize: '10px', color: 'var(--rl-muted)' }}>3000</span>
       </div>
     </div>
   )

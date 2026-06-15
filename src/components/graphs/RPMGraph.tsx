@@ -12,6 +12,7 @@ import {
 } from 'chart.js'
 import { Line } from 'react-chartjs-2'
 import { useHardware } from '../../context/HardwareContext'
+import { useTheme } from '../../context/ThemeContext'
 import { SectionLabel } from '../layout/SectionLabel'
 import { TimeWindowSelector } from './TimeWindowSelector'
 
@@ -28,12 +29,12 @@ Chart.register(
 
 export function RPMGraph() {
   const { graphState, hardware } = useHardware()
+  const { chart } = useTheme()
   const [timeWindow, setTimeWindow] = useState(60)
 
   const rpmData = graphState.rpm
   const isEmpty = rpmData.length === 0
 
-  // Filter to only points within timeWindow seconds of the latest point
   const latestTime = rpmData.length > 0 ? rpmData[rpmData.length - 1].time : 0
   const cutoff = latestTime - timeWindow * 1000
   const filtered = rpmData.filter(p => p.time >= cutoff)
@@ -55,7 +56,7 @@ export function RPMGraph() {
       {
         label: 'Actual RPM',
         data: actualData,
-        borderColor: '#00c853',
+        borderColor: chart.rpm,
         backgroundColor: 'transparent',
         tension: 0.3,
         pointRadius: 0,
@@ -64,7 +65,7 @@ export function RPMGraph() {
       {
         label: 'Target RPM',
         data: targetData,
-        borderColor: '#ffab00',
+        borderColor: chart.rpmTarget,
         backgroundColor: 'transparent',
         borderDash: [4, 4],
         tension: 0,
@@ -85,23 +86,23 @@ export function RPMGraph() {
     scales: {
       x: {
         ticks: {
-          color: '#666666',
+          color: chart.tick,
           font: { family: '"Share Tech Mono", monospace', size: 10 },
           maxTicksLimit: 6,
           maxRotation: 0,
         },
-        grid: { color: '#2a2a2a' },
-        border: { color: '#2a2a2a' },
+        grid: { color: chart.grid },
+        border: { color: chart.grid },
       },
       y: {
         min: 0,
         max: 3200,
         ticks: {
-          color: '#666666',
+          color: chart.tick,
           font: { family: '"Share Tech Mono", monospace', size: 10 },
         },
-        grid: { color: '#2a2a2a' },
-        border: { color: '#2a2a2a' },
+        grid: { color: chart.grid },
+        border: { color: chart.grid },
       },
     },
   }
@@ -119,7 +120,7 @@ export function RPMGraph() {
         <SectionLabel>RPM</SectionLabel>
         <TimeWindowSelector value={timeWindow} onChange={setTimeWindow} />
       </div>
-      <div style={{ position: 'relative', height: '120px' }}>
+      <div style={{ position: 'relative', height: '110px' }}>
         {isEmpty ? (
           <div
             style={{
@@ -128,8 +129,9 @@ export function RPMGraph() {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: '#444444',
-              fontFamily: 'Inter, sans-serif',
+              background: 'transparent',
+              color: 'var(--rl-muted)',
+              fontFamily: "'DM Sans', sans-serif",
               fontSize: '12px',
             }}
           >
