@@ -330,24 +330,36 @@ export default function MotorModel3D({ attachment }: Props) {
     }
 
     else if (attachment === 'propeller') {
-      // 3 long swept blades at 120° intervals — subgroup ensures identical pitch on all blades
-      const bladeMat = new THREE.MeshStandardMaterial({ color: 0x9333ea, metalness: 0.5, roughness: 0.3 })
+      // 3 blades at 120° intervals.
+      // Each blade uses rotation.y (around its own span axis) for pitch = angle of attack.
+      // rotation.z would lean the span sideways — that's the old scatter bug.
+      const bladeMat = new THREE.MeshStandardMaterial({ color: 0x9333ea, metalness: 0.6, roughness: 0.25 })
       for (let i = 0; i < 3; i++) {
         const group = new THREE.Group()
         group.rotation.x = i * (2 * Math.PI / 3)
-        const bladeGeo = new THREE.BoxGeometry(0.04, 1.6, 0.18)
+        // X=thin (face normal), Y=span/radial, Z=chord
+        const bladeGeo = new THREE.BoxGeometry(0.03, 1.4, 0.28)
         const bladeMesh = new THREE.Mesh(bladeGeo, bladeMat)
-        bladeMesh.position.y = 0.8   // blade spans 0 → 1.6 from hub center
-        bladeMesh.rotation.z = -0.18 // pitch angle, same for every blade
+        bladeMesh.position.y = 0.82  // hub_radius(0.13) + half_span(0.7) → blade starts at hub edge
+        bladeMesh.rotation.y = 0.38  // pitch around span axis → uniform angle of attack on all blades
         group.add(bladeMesh)
         rg.add(group)
       }
+      // Hub cylinder aligned with shaft
       const hubMesh = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.12, 0.12, 0.15, 16),
-        new THREE.MeshStandardMaterial({ color: 0x666666 })
+        new THREE.CylinderGeometry(0.13, 0.13, 0.22, 16),
+        new THREE.MeshStandardMaterial({ color: 0x555555, metalness: 0.8 })
       )
       hubMesh.rotation.z = Math.PI / 2
       rg.add(hubMesh)
+      // Spinner nose-cone pointing away from motor (+X)
+      const spinnerMesh = new THREE.Mesh(
+        new THREE.ConeGeometry(0.13, 0.3, 16),
+        new THREE.MeshStandardMaterial({ color: 0x9333ea, metalness: 0.7 })
+      )
+      spinnerMesh.rotation.z = -Math.PI / 2  // tip points +X
+      spinnerMesh.position.x = 0.15
+      rg.add(spinnerMesh)
     }
 
     else if (attachment === 'flywheel') {
