@@ -1,5 +1,6 @@
 import { useHardware } from '../../context/HardwareContext'
 import { useTheme } from '../../context/ThemeContext'
+import { useActivity } from '../../context/ActivityContext'
 import { MOCK_MODE } from '../../config'
 import type { ConnectionStatus, MotorStatus } from '../../context/types'
 
@@ -57,6 +58,7 @@ export function StatusBar() {
   const { hardware } = useHardware()
   const { wsStatus, motorStatus, cameraStatus } = hardware
   const { isDark, toggleTheme } = useTheme()
+  const { mode, startGuidedMode, exitGuidedMode } = useActivity()
 
   return (
     <div
@@ -182,6 +184,26 @@ export function StatusBar() {
         >
           IoT Lab
         </div>
+
+        {/* Guided lab toggle */}
+        <button
+          onClick={mode === 'guided' ? exitGuidedMode : startGuidedMode}
+          style={{
+            background: mode === 'guided' ? 'var(--rl-primary)' : 'var(--rl-raised)',
+            border: `1px solid ${mode === 'guided' ? 'var(--rl-primary)' : 'var(--rl-border)'}`,
+            color: mode === 'guided' ? '#fff' : 'var(--rl-muted)',
+            borderRadius: '9999px',
+            padding: '4px 12px',
+            fontFamily: '"DM Sans", Inter, sans-serif',
+            fontSize: '11px',
+            fontWeight: 600,
+            cursor: 'pointer',
+            userSelect: 'none',
+            transition: 'all 0.2s',
+          }}
+        >
+          {mode === 'guided' ? '✕ Exit Lab' : '⚗ Start Lab'}
+        </button>
 
         <button
           onClick={toggleTheme}

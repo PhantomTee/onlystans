@@ -1,7 +1,11 @@
 import { useRef, useState, useCallback } from 'react'
 import { HardwareProvider } from './context/HardwareContext'
 import { ThemeProvider } from './context/ThemeContext'
+import { ActivityProvider } from './context/ActivityContext'
+import { useActivity } from './context/ActivityContext'
 import { StatusBar } from './components/layout/StatusBar'
+import { ActivityProgress } from './components/activity/ActivityProgress'
+import { ActivityPanel } from './components/activity/ActivityPanel'
 import { PanelWrapper } from './components/layout/PanelWrapper'
 import { SectionLabel } from './components/layout/SectionLabel'
 import MotorModel3D from './components/motor/MotorModel3D'
@@ -98,6 +102,7 @@ function ResizableLayout({
 
 // ── Main dashboard ─────────────────────────────────────────────────────────────
 function Dashboard() {
+  const { mode, currentActivity } = useActivity()
   const [attachment, setAttachment] = useState<ShaftAttachment>('fan')
 
   const ATTACHMENTS: { id: ShaftAttachment; label: string }[] = [
@@ -111,6 +116,7 @@ function Dashboard() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', width: '100vw', height: '100vh', overflow: 'hidden', backgroundColor: 'var(--rl-bg)', transition: 'background-color 0.2s' }}>
       <StatusBar />
+      {mode === 'guided' && <ActivityProgress />}
 
       <ResizableLayout
         left={
@@ -208,24 +214,39 @@ function Dashboard() {
           </>
         }
         right={
-          <>
-            {/* PID */}
-            <PanelWrapper title="PID Tuning">
-              <div style={{ padding: 12 }}>
-                <PIDControls />
-              </div>
-            </PanelWrapper>
-
-            {/* Data logger */}
-            <PanelWrapper title="Data Logger" style={{ flex: 1, overflow: 'hidden' }}>
-              <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '6px 12px', borderBottom: '1px solid var(--rl-border)' }}>
-                <ExportButton />
-              </div>
-              <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
-                <DataLoggerTable />
-              </div>
-            </PanelWrapper>
-          </>
+          mode === 'guided' ? (
+            <>
+              {/* Guided: activity panel fills the space */}
+              <PanelWrapper style={{ flex: 1, overflow: 'hidden' }}>
+                <ActivityPanel />
+              </PanelWrapper>
+              {/* PID always visible for activities 4+ */}
+              {currentActivity >= 4 && (
+                <PanelWrapper title="PID Tuning" style={{ flexShrink: 0 }}>
+                  <div style={{ padding: 12 }}>
+                    <PIDControls />
+                  </div>
+                </PanelWrapper>
+              )}
+            </>
+          ) : (
+            <>
+              {/* Free mode: PID + data logger */}
+              <PanelWrapper title="PID Tuning">
+                <div style={{ padding: 12 }}>
+                  <PIDControls />
+                </div>
+              </PanelWrapper>
+              <PanelWrapper title="Data Logger" style={{ flex: 1, overflow: 'hidden' }}>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '6px 12px', borderBottom: '1px solid var(--rl-border)' }}>
+                  <ExportButton />
+                </div>
+                <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
+                  <DataLoggerTable />
+                </div>
+              </PanelWrapper>
+            </>
+          )
         }
       />
     </div>
@@ -236,7 +257,9 @@ export default function App() {
   return (
     <ThemeProvider>
       <HardwareProvider>
-        <Dashboard />
+        <ActivityProvider>
+          <Dashboard />
+        </ActivityProvider>
       </HardwareProvider>
     </ThemeProvider>
   )
