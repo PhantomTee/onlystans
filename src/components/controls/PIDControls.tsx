@@ -17,9 +17,10 @@ export default function PIDControls() {
     setKd(pidParams.kd)
   }, [pidParams.kp, pidParams.ki, pidParams.kd])
 
-  if (experimentMode === 'OPEN_LOOP') return null
+  const isOpenLoop = experimentMode === 'OPEN_LOOP'
 
   const handleApply = () => {
+    if (isOpenLoop) return
     sendCommand(createSetPID(kp, ki, kd))
     setApplied(true)
     setTimeout(() => setApplied(false), 1500)
@@ -58,7 +59,7 @@ export default function PIDControls() {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', opacity: isOpenLoop ? 0.4 : 1, transition: 'opacity 0.2s' }}>
       <div>
         <label style={labelStyle}>Kp — Proportional</label>
         <input
@@ -66,10 +67,11 @@ export default function PIDControls() {
           step={0.01}
           min={0}
           value={kp}
+          disabled={isOpenLoop}
           onChange={e => setKp(Number(e.target.value))}
           onFocus={handleFocus}
           onBlur={handleBlur}
-          style={inputStyle}
+          style={{ ...inputStyle, cursor: isOpenLoop ? 'not-allowed' : 'text' }}
         />
       </div>
 
@@ -80,10 +82,11 @@ export default function PIDControls() {
           step={0.01}
           min={0}
           value={ki}
+          disabled={isOpenLoop}
           onChange={e => setKi(Number(e.target.value))}
           onFocus={handleFocus}
           onBlur={handleBlur}
-          style={inputStyle}
+          style={{ ...inputStyle, cursor: isOpenLoop ? 'not-allowed' : 'text' }}
         />
       </div>
 
@@ -94,15 +97,17 @@ export default function PIDControls() {
           step={0.01}
           min={0}
           value={kd}
+          disabled={isOpenLoop}
           onChange={e => setKd(Number(e.target.value))}
           onFocus={handleFocus}
           onBlur={handleBlur}
-          style={inputStyle}
+          style={{ ...inputStyle, cursor: isOpenLoop ? 'not-allowed' : 'text' }}
         />
       </div>
 
       <button
         onClick={handleApply}
+        disabled={isOpenLoop}
         style={{
           width: '100%',
           background: 'var(--rl-primary)',
@@ -113,12 +118,12 @@ export default function PIDControls() {
           padding: '8px',
           borderRadius: '6px',
           border: 'none',
-          cursor: 'pointer',
+          cursor: isOpenLoop ? 'not-allowed' : 'pointer',
           transition: 'opacity 0.2s',
           letterSpacing: '0.04em',
         }}
       >
-        {applied ? '✓ Applied' : 'Apply PID'}
+        {isOpenLoop ? 'PID not used in Open Loop' : applied ? '✓ Applied' : 'Apply PID'}
       </button>
     </div>
   )

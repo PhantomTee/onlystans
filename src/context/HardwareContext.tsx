@@ -23,12 +23,13 @@ const initialHardwareState: HardwareState = {
   motorStatus: 'STOPPED',
   direction: 'FORWARD',
   currentRPM: 0,
-  targetRPM: 1500,
+  targetRPM: 60,
   currentPWM: 0,
   pidError: 0,
   controlMode: 'CLOSED_LOOP',
   experimentMode: 'CLOSED_LOOP_PID',
   pidParams: { kp: 2.0, ki: 0.5, kd: 0.1 },
+  loadApplied: false,
   lastUpdate: 0,
 }
 

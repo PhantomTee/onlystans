@@ -19,6 +19,7 @@ export interface HardwareState {
   controlMode: ControlMode
   experimentMode: ExperimentMode
   pidParams: PIDParams
+  loadApplied: boolean
   lastUpdate: number
 }
 

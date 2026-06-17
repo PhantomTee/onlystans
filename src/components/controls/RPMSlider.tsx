@@ -51,8 +51,8 @@ export default function RPMSlider() {
       <input
         type="range"
         min={0}
-        max={3000}
-        step={50}
+        max={110}
+        step={1}
         value={localValue}
         onChange={handleChange}
         onMouseUp={handleCommit}
@@ -66,7 +66,7 @@ export default function RPMSlider() {
 
       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
         <span style={{ fontFamily: '"Share Tech Mono", monospace', fontSize: '10px', color: 'var(--rl-muted)' }}>0</span>
-        <span style={{ fontFamily: '"Share Tech Mono", monospace', fontSize: '10px', color: 'var(--rl-muted)' }}>3000</span>
+        <span style={{ fontFamily: '"Share Tech Mono", monospace', fontSize: '10px', color: 'var(--rl-muted)' }}>110</span>
       </div>
     </div>
   )

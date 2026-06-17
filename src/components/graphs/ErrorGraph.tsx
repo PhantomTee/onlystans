@@ -93,8 +93,8 @@ export function ErrorGraph() {
         border: { color: chart.grid },
       },
       y: {
-        suggestedMin: -500,
-        suggestedMax: 500,
+        suggestedMin: -20,
+        suggestedMax: 20,
         ticks: {
           color: chart.tick,
           font: { family: '"Share Tech Mono", monospace', size: 10 },

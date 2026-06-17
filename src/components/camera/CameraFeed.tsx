@@ -45,6 +45,18 @@ export default function CameraFeed() {
           >
             Camera Offline — Awaiting Hardware
           </span>
+          <span
+            style={{
+              fontFamily: "'DM Sans', sans-serif",
+              fontSize: '10px',
+              color: 'var(--rl-muted)',
+              textAlign: 'center',
+              marginTop: '4px',
+              padding: '0 16px',
+            }}
+          >
+            ESP32-CAM will connect automatically once hardware is deployed
+          </span>
         </div>
       ) : (
         <img

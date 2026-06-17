@@ -22,7 +22,7 @@ export function useMockWebSocket(): MockWebSocketHook {
   // All simulation state in refs so they don't trigger re-renders
   const motorStatus = useRef<MotorStatus>('STOPPED')
   const direction = useRef<MotorDirection>('FORWARD')
-  const targetRPM = useRef<number>(1500)
+  const targetRPM = useRef<number>(60)
   const currentRPM = useRef<number>(0)
   const currentPWM = useRef<number>(0)
   const controlMode = useRef<ControlMode>('CLOSED_LOOP')
@@ -32,6 +32,13 @@ export function useMockWebSocket(): MockWebSocketHook {
   const pidPrevError = useRef<number>(0)
   const loadDisturbanceTimer = useRef<number>(0)
   const stepStarted = useRef<boolean>(false)
+  const loadApplied = useRef<boolean>(false)
+
+  // Max achievable RPM for the JGB37-520 gear motor used in this lab
+  const MAX_RPM = 110
+  // A mechanical load (e.g. a flywheel/grinder on the shaft) reduces the RPM
+  // a given PWM duty cycle can actually achieve
+  const LOAD_FACTOR = 0.7
 
   // Map mode string from SET_MODE payload to ExperimentMode enum value
   function mapToExperimentMode(mode: string): ExperimentMode {
@@ -112,6 +119,12 @@ export function useMockWebSocket(): MockWebSocketHook {
         }
         break
 
+      case 'SET_LOAD':
+        if (payload && typeof payload.applied === 'boolean') {
+          loadApplied.current = payload.applied
+        }
+        break
+
       case 'PING':
         // No-op for ping
         break
@@ -137,7 +150,7 @@ export function useMockWebSocket(): MockWebSocketHook {
         // STEP_RESPONSE: set initial target once
         if (expMode === 'STEP_RESPONSE') {
           if (!stepStarted.current) {
-            targetRPM.current = 1500
+            targetRPM.current = 30
             stepStarted.current = true
           }
         }
@@ -148,13 +161,14 @@ export function useMockWebSocket(): MockWebSocketHook {
           // 3s = 15 ticks, 5s = 25 ticks — pick a random threshold in [15, 25]
           const threshold = 15 + Math.floor(Math.random() * 11) // 15..25
           if (loadDisturbanceTimer.current >= threshold) {
-            const disturbance = -(50 + Math.random() * 50) // -50 to -100
-            currentRPM.current = clamp(currentRPM.current + disturbance, 0, 3500)
+            const disturbance = -(2 + Math.random() * 2) // -2 to -4
+            currentRPM.current = clamp(currentRPM.current + disturbance, 0, MAX_RPM + 20)
             loadDisturbanceTimer.current = 0
           }
         }
 
         const ctrlMode = controlMode.current
+        const loadScale = loadApplied.current ? LOAD_FACTOR : 1
 
         if (ctrlMode === 'CLOSED_LOOP' || expMode === 'CLOSED_LOOP_PID' || expMode === 'STEP_RESPONSE' || expMode === 'SPEED_REGULATION') {
           // Discrete PID control
@@ -165,18 +179,18 @@ export function useMockWebSocket(): MockWebSocketHook {
           const output = kp * error + ki * pidIntegral.current + kd * derivative
           const clampedOutput = clamp(output, 0, 255)
           currentPWM.current = clampedOutput
-          // RPM advances toward target with inertia
-          const rpmFromPWM = pwmToRPM(currentPWM.current)
+          // RPM advances toward target with inertia (load reduces achievable RPM)
+          const rpmFromPWM = pwmToRPM(currentPWM.current) * loadScale
           currentRPM.current += (rpmFromPWM - currentRPM.current) * 0.15
           pidPrevError.current = error
         } else if (ctrlMode === 'OPEN_LOOP' || expMode === 'OPEN_LOOP') {
           // Open loop: RPM advances toward pwmToRPM(currentPWM) with inertia factor 0.1
-          const rpmFromPWM = pwmToRPM(currentPWM.current)
+          const rpmFromPWM = pwmToRPM(currentPWM.current) * loadScale
           currentRPM.current += (rpmFromPWM - currentRPM.current) * 0.1
         }
 
-        // Add gaussian noise ±10 to currentRPM and clamp
-        currentRPM.current = clamp(addGaussianNoise(currentRPM.current, 10), 0, 3500)
+        // Add gaussian noise to currentRPM and clamp
+        currentRPM.current = clamp(addGaussianNoise(currentRPM.current, 1), 0, MAX_RPM + 20)
       }
 
       const pidError =
@@ -197,6 +211,7 @@ export function useMockWebSocket(): MockWebSocketHook {
         controlMode: controlMode.current,
         experimentMode: experimentMode.current,
         pidParams: { ...pidParams.current },
+        loadApplied: loadApplied.current,
         lastUpdate: Date.now(),
       }
 

@@ -37,7 +37,7 @@ export const ACTIVITIES: ActivityDef[] = [
     setup: [
       'Mode → Open-Loop',
       'Direction → Forward',
-      'Attachment → Fan',
+      'Mechanical Load → No Load',
     ],
     instructions: [
       'Set Mode to Open-Loop using the Mode selector in the Controls panel',
@@ -77,23 +77,23 @@ export const ACTIVITIES: ActivityDef[] = [
     setup: [
       'Mode → Closed-Loop PID',
       'PID defaults: Kp=2.0 Ki=0.5 Kd=0.1',
-      'Target RPM → 1500',
-      'Attachment → Flywheel',
+      'Target RPM → 60',
+      'Mechanical Load → No Load',
     ],
     instructions: [
       'Switch Mode to Closed-Loop PID',
-      'Set Target RPM to 1500 using the RPM slider',
+      'Set Target RPM to 60 using the RPM slider',
       'Leave PID values at defaults (Kp=2.0, Ki=0.5, Kd=0.1)',
-      'Press START and watch the RPM graph — does the motor reach 1500 RPM?',
+      'Press START and watch the RPM graph — does the motor reach 60 RPM?',
       'Observe the PWM graph: the controller is automatically adjusting duty cycle',
       'After 20 seconds, export the CSV and record your observations',
     ],
     fields: [
       {
         id: 'target_achieved',
-        label: 'Did the motor reach and maintain 1500 RPM? How quickly?',
+        label: 'Did the motor reach and maintain 60 RPM? How quickly?',
         type: 'text',
-        placeholder: 'e.g. Yes — reached target in about 4 seconds and held within ±20 RPM',
+        placeholder: 'e.g. Yes — reached target in about 4 seconds and held within ±2 RPM',
         required: true,
       },
       {
@@ -117,22 +117,22 @@ export const ACTIVITIES: ActivityDef[] = [
     setup: [
       'Mode → Closed-Loop PID',
       'PID defaults: Kp=2.0 Ki=0.5 Kd=0.1',
-      'Attachment → Flywheel',
+      'Mechanical Load → No Load',
     ],
     instructions: [
-      'Start motor at Target RPM = 800',
+      'Start motor at Target RPM = 30',
       'Let it stabilise for 10 seconds',
-      'Change Target RPM to 1800 (a large step) — the motor must accelerate',
+      'Change Target RPM to 90 (a large step) — the motor must accelerate',
       'Watch the RPM graph carefully for overshoot and settling',
       'Export the CSV — use it to measure the values below',
-      'Rise time = time from step until RPM first reaches 90% of 1800 (= 1620 RPM)',
-      'Overshoot = (peak RPM − 1800) / 1800 × 100 %',
-      'Settling time = time until RPM stays within ±5% of 1800 permanently',
+      'Rise time = time from step until RPM first reaches 90% of 90 (= 81 RPM)',
+      'Overshoot = (peak RPM − 90) / 90 × 100 %',
+      'Settling time = time until RPM stays within ±5% of 90 permanently',
     ],
     fields: [
       {
         id: 'rise_time',
-        label: 'Rise time (seconds to first reach 1620 RPM)',
+        label: 'Rise time (seconds to first reach 81 RPM)',
         type: 'text',
         placeholder: 'e.g. 3.2',
         required: true,
@@ -141,19 +141,19 @@ export const ACTIVITIES: ActivityDef[] = [
         id: 'overshoot_rpm',
         label: 'Peak RPM (highest value observed on the graph)',
         type: 'text',
-        placeholder: 'e.g. 1953',
+        placeholder: 'e.g. 97',
         required: true,
       },
       {
         id: 'overshoot_pct',
-        label: 'Overshoot % = (Peak RPM − 1800) / 1800 × 100',
+        label: 'Overshoot % = (Peak RPM − 90) / 90 × 100',
         type: 'text',
         placeholder: 'e.g. 8.5',
         required: true,
       },
       {
         id: 'settling_time',
-        label: 'Settling time (seconds until RPM stays within ±90 of 1800)',
+        label: 'Settling time (seconds until RPM stays within ±4.5 of 90)',
         type: 'text',
         placeholder: 'e.g. 7.1',
         required: true,
@@ -171,8 +171,8 @@ export const ACTIVITIES: ActivityDef[] = [
     objective: 'Change Kp, Ki, and Kd independently on the web interface and observe live how each parameter affects stability, speed of response, and oscillation.',
     setup: [
       'Mode → Closed-Loop PID',
-      'Target RPM → 1500',
-      'Attachment → Flywheel',
+      'Target RPM → 60',
+      'Mechanical Load → No Load',
     ],
     instructions: [
       'Test A — High Kp: Set Kp=8.0, Ki=0, Kd=0. Run and observe oscillation.',
@@ -201,7 +201,7 @@ export const ACTIVITIES: ActivityDef[] = [
         id: 'ki_effect',
         label: 'Test C (Kp=2.0, Ki=2.0, Kd=0): Did steady-state error disappear?',
         type: 'text',
-        placeholder: 'e.g. Yes — RPM converged exactly to 1500 after about 6 seconds',
+        placeholder: 'e.g. Yes — RPM converged exactly to 60 after about 6 seconds',
         required: true,
       },
       {
@@ -224,7 +224,7 @@ export const ACTIVITIES: ActivityDef[] = [
     objective: 'Sweep PWM from 0 to 100% in steps and plot the motor\'s transfer characteristic. Discover the PWM deadband (below which the motor does not spin) and the speed saturation region.',
     setup: [
       'Mode → Open-Loop',
-      'Attachment → Fan',
+      'Mechanical Load → No Load',
       'Direction → Forward',
     ],
     instructions: [
@@ -270,37 +270,37 @@ export const ACTIVITIES: ActivityDef[] = [
     objective: 'Apply a mechanical load mid-run and compare open-loop vs closed-loop behaviour. In closed-loop, the PID recovers target speed; in open-loop, RPM drops and stays low.',
     setup: [
       'Camera feed enabled (observe shaft physically)',
-      'Target RPM → 1500',
+      'Target RPM → 60',
     ],
     instructions: [
       'Part A — Open-Loop: Set Mode to Open-Loop, PWM 60%, run motor until stable',
-      'Switch shaft attachment from Fan to Flywheel (simulates load increase)',
+      'Toggle Mechanical Load from No Load to Apply Load (simulates a load increase)',
       'Record RPM before and after the load change',
-      'Part B — Closed-Loop: Set Mode to Closed-Loop PID, Target=1500, run until stable',
-      'Switch attachment from Fan to Flywheel again',
-      'Observe on the graph: does the PID recover to 1500 RPM?',
+      'Part B — Closed-Loop: Set Mode to Closed-Loop PID, Target=60, run until stable',
+      'Toggle Mechanical Load from No Load to Apply Load again',
+      'Observe on the graph: does the PID recover to 60 RPM?',
       'Export CSV capturing both load disturbances',
     ],
     fields: [
       {
         id: 'openloop_before',
-        label: 'Open-Loop: RPM before load (Fan attached)',
+        label: 'Open-Loop: RPM before load (No Load)',
         type: 'text',
-        placeholder: 'e.g. 1420',
+        placeholder: 'e.g. 64',
         required: true,
       },
       {
         id: 'openloop_after',
-        label: 'Open-Loop: RPM after load (Flywheel attached)',
+        label: 'Open-Loop: RPM after load (Load Applied)',
         type: 'text',
-        placeholder: 'e.g. 1180',
+        placeholder: 'e.g. 45',
         required: true,
       },
       {
         id: 'closedloop_recovery',
-        label: 'Closed-Loop: Did RPM recover to 1500 after the load change? How long?',
+        label: 'Closed-Loop: Did RPM recover to 60 after the load change? How long?',
         type: 'text',
-        placeholder: 'e.g. Yes — recovered to 1500 in about 5 seconds',
+        placeholder: 'e.g. Yes — recovered to 60 in about 5 seconds',
         required: true,
       },
       {
@@ -323,13 +323,12 @@ export const ACTIVITIES: ActivityDef[] = [
     objective: 'Toggle motor direction between Forward and Reverse using the web interface while monitoring the RPM graph and camera feed. Understand H-bridge polarity reversal.',
     setup: [
       'Mode → Closed-Loop PID',
-      'Target RPM → 1000',
+      'Target RPM → 40',
       'Camera feed enabled',
-      'Attachment → Propeller (visually clear direction)',
     ],
     instructions: [
-      'Set Target RPM to 1000, Mode to Closed-Loop PID',
-      'Attach PROPELLER — its spin direction is clearly visible on camera',
+      'Set Target RPM to 40, Mode to Closed-Loop PID',
+      'Watch the encoder disc on the motor shaft — its spin direction is clearly visible on camera',
       'Press START in Forward direction — observe RPM graph and camera',
       'Press STOP, then toggle direction to Reverse',
       'Press START again — observe the shaft reversing on camera',
@@ -368,8 +367,8 @@ export const ACTIVITIES: ActivityDef[] = [
     ],
     instructions: [
       'Set Mode to Open-Loop, PWM to 60%',
-      'Step 1 — No load: Attach Fan (lightest load), run until stable, record RPM',
-      'Step 2 — Full load: Switch to Flywheel (heaviest load), record RPM at SAME PWM',
+      'Step 1 — No load: Mechanical Load → No Load, run until stable, record RPM',
+      'Step 2 — Full load: Mechanical Load → Apply Load, record RPM at SAME PWM',
       'Export CSV capturing both readings',
       'Calculate: SR% = (No-Load RPM − Full-Load RPM) / Full-Load RPM × 100',
       'Enter your values and calculated result below',
@@ -377,16 +376,16 @@ export const ACTIVITIES: ActivityDef[] = [
     fields: [
       {
         id: 'noload_rpm',
-        label: 'No-Load RPM (Fan attachment, PWM 60%)',
+        label: 'No-Load RPM (No Load, PWM 60%)',
         type: 'text',
-        placeholder: 'e.g. 1480',
+        placeholder: 'e.g. 65',
         required: true,
       },
       {
         id: 'fullload_rpm',
-        label: 'Full-Load RPM (Flywheel attachment, same PWM 60%)',
+        label: 'Full-Load RPM (Load Applied, same PWM 60%)',
         type: 'text',
-        placeholder: 'e.g. 1210',
+        placeholder: 'e.g. 50',
         required: true,
       },
       {

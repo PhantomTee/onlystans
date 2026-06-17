@@ -2,13 +2,7 @@ import { useRef, useEffect, useState } from 'react'
 import * as THREE from 'three'
 import { useHardware } from '../../context/HardwareContext'
 
-export type ShaftAttachment = 'fan' | 'propeller' | 'flywheel' | 'grinding' | 'impeller'
-
-interface Props {
-  attachment: ShaftAttachment
-}
-
-export default function MotorModel3D({ attachment }: Props) {
+export default function MotorModel3D() {
   const containerRef = useRef<HTMLDivElement>(null)
   const { hardware } = useHardware()
   const hardwareRef = useRef(hardware)
@@ -39,9 +33,6 @@ export default function MotorModel3D({ attachment }: Props) {
       radius: 5.5,
     }
   }
-
-  // ── Rotating group ref (so attachment effect can reach it) ───────────────────
-  const rotatingGroupRef = useRef<THREE.Group | null>(null)
 
   // ── Main Three.js scene setup ────────────────────────────────────────────────
   useEffect(() => {
@@ -82,87 +73,134 @@ export default function MotorModel3D({ attachment }: Props) {
     accentLight.position.set(0, 0, 3)
     scene.add(accentLight)
 
-    // ── Motor Group (static — does NOT rotate) ───────────────────────────────
+    // ── Motor body group (static — does NOT rotate) ──────────────────────────
     const motorGroup = new THREE.Group()
     scene.add(motorGroup)
 
-    // Body
-    const bodyGeo = new THREE.CylinderGeometry(0.6, 0.6, 2.0, 32)
+    // Motor can (cylindrical body, JGB37-520 style)
+    const bodyGeo = new THREE.CylinderGeometry(0.55, 0.55, 1.6, 32)
     const bodyMesh = new THREE.Mesh(
       bodyGeo,
       new THREE.MeshStandardMaterial({ color: 0x252030, roughness: 0.3, metalness: 0.85 })
     )
     bodyMesh.rotation.z = Math.PI / 2
+    bodyMesh.position.x = -0.6
     motorGroup.add(bodyMesh)
 
-    // End cap — front
-    const capFrontGeo = new THREE.CylinderGeometry(0.62, 0.62, 0.08, 32)
-    const capFrontMesh = new THREE.Mesh(
-      capFrontGeo,
-      new THREE.MeshStandardMaterial({ color: 0x1a1528, metalness: 0.9 })
-    )
-    capFrontMesh.rotation.z = Math.PI / 2
-    capFrontMesh.position.x = 1.04
-    motorGroup.add(capFrontMesh)
-
-    // End cap — rear
-    const capRearGeo = new THREE.CylinderGeometry(0.62, 0.62, 0.08, 32)
+    // End cap — rear of motor can
+    const capRearGeo = new THREE.CylinderGeometry(0.57, 0.57, 0.07, 32)
     const capRearMesh = new THREE.Mesh(
       capRearGeo,
       new THREE.MeshStandardMaterial({ color: 0x1a1528, metalness: 0.9 })
     )
     capRearMesh.rotation.z = Math.PI / 2
-    capRearMesh.position.x = -1.04
+    capRearMesh.position.x = -1.43
     motorGroup.add(capRearMesh)
 
-    // Cooling fins — 8 fins radially
+    // Cooling fins — 8 fins radially around the motor can
     for (let i = 0; i < 8; i++) {
       const angle = i * (Math.PI / 4)
-      const finGeo = new THREE.BoxGeometry(2.0, 0.06, 0.03)
+      const finGeo = new THREE.BoxGeometry(1.5, 0.05, 0.03)
       const finMesh = new THREE.Mesh(
         finGeo,
         new THREE.MeshStandardMaterial({ color: 0x1a1528, metalness: 0.9, roughness: 0.3 })
       )
       finMesh.rotation.x = angle
-      finMesh.position.y = Math.sin(angle) * 0.64
-      finMesh.position.z = Math.cos(angle) * 0.64
+      finMesh.position.x = -0.6
+      finMesh.position.y = Math.sin(angle) * 0.59
+      finMesh.position.z = Math.cos(angle) * 0.59
       motorGroup.add(finMesh)
     }
 
-    // Terminal box
-    const terminalGeo = new THREE.BoxGeometry(0.6, 0.3, 0.28)
+    // Gearbox housing — squarish metal box between motor can and shaft
+    const gearboxGeo = new THREE.BoxGeometry(0.75, 0.78, 0.78)
+    const gearboxMesh = new THREE.Mesh(
+      gearboxGeo,
+      new THREE.MeshStandardMaterial({ color: 0x6b6b6b, metalness: 0.85, roughness: 0.35 })
+    )
+    gearboxMesh.position.x = 0.45
+    motorGroup.add(gearboxMesh)
+
+    // Gearbox mounting bracket holes (small dark cylinders, cosmetic detail)
+    const boltPositions = [
+      [0.1, 0.27, 0.27], [0.1, -0.27, 0.27], [0.1, 0.27, -0.27], [0.1, -0.27, -0.27],
+    ]
+    for (const [bx, by, bz] of boltPositions) {
+      const boltGeo = new THREE.CylinderGeometry(0.04, 0.04, 0.05, 8)
+      const boltMesh = new THREE.Mesh(
+        boltGeo,
+        new THREE.MeshStandardMaterial({ color: 0x333333, metalness: 0.9 })
+      )
+      boltMesh.rotation.z = Math.PI / 2
+      boltMesh.position.set(bx, by, bz)
+      motorGroup.add(boltMesh)
+    }
+
+    // Terminal box (power leads) on top of motor can
+    const terminalGeo = new THREE.BoxGeometry(0.4, 0.22, 0.2)
     const terminalMesh = new THREE.Mesh(
       terminalGeo,
       new THREE.MeshStandardMaterial({ color: 0x2a2040, metalness: 0.6 })
     )
-    terminalMesh.position.set(0, 0.75, 0)
+    terminalMesh.position.set(-0.6, 0.66, 0)
     motorGroup.add(terminalMesh)
 
-    // Shaft
-    const shaftGeo = new THREE.CylinderGeometry(0.07, 0.07, 1.5, 16)
+    // ── Rotating group (shaft + encoder disc — spins with the motor) ─────────
+    const rotatingGroup = new THREE.Group()
+    rotatingGroup.position.x = 0.83
+    scene.add(rotatingGroup)
+
+    // Short output shaft protruding from the gearbox face
+    const shaftGeo = new THREE.CylinderGeometry(0.065, 0.065, 0.55, 16)
     const shaftMesh = new THREE.Mesh(
       shaftGeo,
-      new THREE.MeshStandardMaterial({ color: 0xbbbbbb, metalness: 1.0, roughness: 0.1 })
+      new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 1.0, roughness: 0.1 })
     )
     shaftMesh.rotation.z = Math.PI / 2
-    shaftMesh.position.x = 1.5
-    motorGroup.add(shaftMesh)
+    shaftMesh.position.x = 0.275
+    rotatingGroup.add(shaftMesh)
 
-    // Shaft coupling
-    const couplingGeo = new THREE.CylinderGeometry(0.12, 0.12, 0.1, 16)
-    const couplingMesh = new THREE.Mesh(
-      couplingGeo,
-      new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.9 })
+    // Flat key-cut on the shaft tip (small box, cosmetic)
+    const keyGeo = new THREE.BoxGeometry(0.12, 0.025, 0.065)
+    const keyMesh = new THREE.Mesh(
+      keyGeo,
+      new THREE.MeshStandardMaterial({ color: 0xaaaaaa, metalness: 1.0 })
     )
-    couplingMesh.rotation.z = Math.PI / 2
-    couplingMesh.position.x = 2.2
-    motorGroup.add(couplingMesh)
+    keyMesh.position.x = 0.48
+    keyMesh.position.y = 0.045
+    rotatingGroup.add(keyMesh)
 
-    // ── Rotating Group (attachment lives here) ───────────────────────────────
-    const rotatingGroup = new THREE.Group()
-    rotatingGroup.position.x = 2.3
-    scene.add(rotatingGroup)
-    rotatingGroupRef.current = rotatingGroup
+    // Encoder disc — slotted disc mounted near the gearbox face for speed sensing
+    const discMesh = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.32, 0.32, 0.04, 48),
+      new THREE.MeshStandardMaterial({ color: 0x111111, metalness: 0.4, roughness: 0.6 })
+    )
+    discMesh.rotation.z = Math.PI / 2
+    discMesh.position.x = 0.06
+    rotatingGroup.add(discMesh)
+
+    // Radial encoder slots around the disc rim
+    const slotMat = new THREE.MeshStandardMaterial({ color: 0xdddddd, metalness: 0.3 })
+    const slotCount = 20
+    for (let i = 0; i < slotCount; i++) {
+      const angle = (i / slotCount) * Math.PI * 2
+      const slotGeo = new THREE.BoxGeometry(0.05, 0.07, 0.012)
+      const slotMesh = new THREE.Mesh(slotGeo, slotMat)
+      slotMesh.position.x = 0.06
+      slotMesh.position.y = Math.sin(angle) * 0.29
+      slotMesh.position.z = Math.cos(angle) * 0.29
+      slotMesh.rotation.x = angle
+      rotatingGroup.add(slotMesh)
+    }
+
+    // Hub at the disc center
+    const hubMesh = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.07, 0.07, 0.08, 16),
+      new THREE.MeshStandardMaterial({ color: 0x999999, metalness: 0.9 })
+    )
+    hubMesh.rotation.z = Math.PI / 2
+    hubMesh.position.x = 0.06
+    rotatingGroup.add(hubMesh)
 
     // ── Animation state ──────────────────────────────────────────────────────
     let animFrameId: number
@@ -274,170 +312,8 @@ export default function MotorModel3D({ attachment }: Props) {
       if (container.contains(renderer.domElement)) {
         container.removeChild(renderer.domElement)
       }
-      rotatingGroupRef.current = null
     }
   }, [])
-
-  // ── Attachment rebuild ───────────────────────────────────────────────────────
-  useEffect(() => {
-    const rg = rotatingGroupRef.current
-    if (!rg) return
-
-    // Recursively dispose geometries and materials (handles nested Groups)
-    const disposeObj = (obj: THREE.Object3D) => {
-      obj.traverse(child => {
-        const mesh = child as THREE.Mesh
-        if (mesh.geometry) mesh.geometry.dispose()
-        if (mesh.material) {
-          const m = mesh.material
-          if (Array.isArray(m)) m.forEach(x => x.dispose())
-          else (m as THREE.Material).dispose()
-        }
-      })
-    }
-    while (rg.children.length > 0) {
-      const child = rg.children[0]
-      disposeObj(child)
-      rg.remove(child)
-    }
-
-    if (attachment === 'fan') {
-      // 4 blades: each in its own group rotated around shaft axis (X)
-      // so the pitch (rotation.z) is applied identically in every blade's local frame
-      const bladeMat = new THREE.MeshStandardMaterial({ color: 0x7C3AED, metalness: 0.6 })
-      for (let i = 0; i < 4; i++) {
-        const group = new THREE.Group()
-        group.rotation.x = i * (Math.PI / 2)
-        const bladeGeo = new THREE.BoxGeometry(0.07, 0.52, 0.07)
-        const bladeMesh = new THREE.Mesh(bladeGeo, bladeMat)
-        bladeMesh.position.y = 0.26   // center blade so it radiates from hub outward
-        bladeMesh.rotation.z = 0.18   // consistent pitch for all blades
-        group.add(bladeMesh)
-        rg.add(group)
-      }
-      const hubMesh = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.1, 0.1, 0.12, 16),
-        new THREE.MeshStandardMaterial({ color: 0x888888 })
-      )
-      hubMesh.rotation.z = Math.PI / 2
-      rg.add(hubMesh)
-      const guardMesh = new THREE.Mesh(
-        new THREE.TorusGeometry(0.52, 0.025, 8, 32),
-        new THREE.MeshStandardMaterial({ color: 0x444444 })
-      )
-      guardMesh.rotation.y = Math.PI / 2
-      rg.add(guardMesh)
-    }
-
-    else if (attachment === 'propeller') {
-      // 3 blades at 120° intervals.
-      // Each blade uses rotation.y (around its own span axis) for pitch = angle of attack.
-      // rotation.z would lean the span sideways — that's the old scatter bug.
-      const bladeMat = new THREE.MeshStandardMaterial({ color: 0x9333ea, metalness: 0.6, roughness: 0.25 })
-      for (let i = 0; i < 3; i++) {
-        const group = new THREE.Group()
-        group.rotation.x = i * (2 * Math.PI / 3)
-        // X=thin (face normal), Y=span/radial, Z=chord
-        const bladeGeo = new THREE.BoxGeometry(0.03, 1.4, 0.28)
-        const bladeMesh = new THREE.Mesh(bladeGeo, bladeMat)
-        bladeMesh.position.y = 0.82  // hub_radius(0.13) + half_span(0.7) → blade starts at hub edge
-        bladeMesh.rotation.y = 0.38  // pitch around span axis → uniform angle of attack on all blades
-        group.add(bladeMesh)
-        rg.add(group)
-      }
-      // Hub cylinder aligned with shaft
-      const hubMesh = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.13, 0.13, 0.22, 16),
-        new THREE.MeshStandardMaterial({ color: 0x555555, metalness: 0.8 })
-      )
-      hubMesh.rotation.z = Math.PI / 2
-      rg.add(hubMesh)
-      // Spinner nose-cone pointing away from motor (+X)
-      const spinnerMesh = new THREE.Mesh(
-        new THREE.ConeGeometry(0.13, 0.3, 16),
-        new THREE.MeshStandardMaterial({ color: 0x9333ea, metalness: 0.7 })
-      )
-      spinnerMesh.rotation.z = -Math.PI / 2  // tip points +X
-      spinnerMesh.position.x = 0.15
-      rg.add(spinnerMesh)
-    }
-
-    else if (attachment === 'flywheel') {
-      const discMesh = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.9, 0.9, 0.28, 48),
-        new THREE.MeshStandardMaterial({ color: 0x333333, metalness: 0.95, roughness: 0.15 })
-      )
-      discMesh.rotation.z = Math.PI / 2
-      rg.add(discMesh)
-      // 4 spokes radiating in the YZ plane (perpendicular to shaft)
-      const spokeMat = new THREE.MeshStandardMaterial({ color: 0x555555, metalness: 0.9 })
-      for (let i = 0; i < 4; i++) {
-        const group = new THREE.Group()
-        group.rotation.x = i * (Math.PI / 2)
-        const spokeMesh = new THREE.Mesh(
-          new THREE.BoxGeometry(0.06, 0.7, 0.06),  // long in Y = radial direction
-          spokeMat
-        )
-        spokeMesh.position.y = 0.35  // offset so spoke runs from hub outward
-        group.add(spokeMesh)
-        rg.add(group)
-      }
-      const hubMesh = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.14, 0.14, 0.32, 16),
-        new THREE.MeshStandardMaterial({ color: 0xaaaaaa, metalness: 1.0 })
-      )
-      hubMesh.rotation.z = Math.PI / 2
-      rg.add(hubMesh)
-    }
-
-    else if (attachment === 'grinding') {
-      const discMesh = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.72, 0.72, 0.06, 48),
-        new THREE.MeshStandardMaterial({ color: 0x888866, metalness: 0.2, roughness: 0.9 })
-      )
-      discMesh.rotation.z = Math.PI / 2
-      rg.add(discMesh)
-      const rimMesh = new THREE.Mesh(
-        new THREE.TorusGeometry(0.72, 0.04, 6, 48),
-        new THREE.MeshStandardMaterial({ color: 0x777755 })
-      )
-      rimMesh.rotation.y = Math.PI / 2
-      rg.add(rimMesh)
-      const hubMesh = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.1, 0.1, 0.1, 16),
-        new THREE.MeshStandardMaterial({ color: 0xaaaaaa })
-      )
-      hubMesh.rotation.z = Math.PI / 2
-      rg.add(hubMesh)
-    }
-
-    else if (attachment === 'impeller') {
-      // 6 swept blades at 60° intervals — subgroup ensures identical sweep on all blades
-      const bladeMat = new THREE.MeshStandardMaterial({ color: 0x6D28D9, metalness: 0.7 })
-      for (let i = 0; i < 6; i++) {
-        const group = new THREE.Group()
-        group.rotation.x = i * (Math.PI / 3)
-        const bladeGeo = new THREE.BoxGeometry(0.08, 0.4, 0.32)
-        const bladeMesh = new THREE.Mesh(bladeGeo, bladeMat)
-        bladeMesh.position.y = 0.22  // blade center offset from hub
-        bladeMesh.rotation.z = 0.38  // backward sweep, same for all blades
-        group.add(bladeMesh)
-        rg.add(group)
-      }
-      const hubMesh = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.15, 0.15, 0.14, 16),
-        new THREE.MeshStandardMaterial({ color: 0x888888 })
-      )
-      hubMesh.rotation.z = Math.PI / 2
-      rg.add(hubMesh)
-      const shroudMesh = new THREE.Mesh(
-        new THREE.TorusGeometry(0.48, 0.04, 8, 32),
-        new THREE.MeshStandardMaterial({ color: 0x5B21B6 })
-      )
-      shroudMesh.rotation.y = Math.PI / 2
-      rg.add(shroudMesh)
-    }
-  }, [attachment])
 
   // ── Container event handlers (react synthetic) ───────────────────────────────
   const handleMouseDown = (e: React.MouseEvent) => {

@@ -5,7 +5,7 @@ export function ErrorDisplay() {
   const { pidError, motorStatus } = hardware
 
   const motorStopped = motorStatus !== 'RUNNING'
-  const isLargeNegative = pidError < -5
+  const isLargeNegative = pidError < -3
 
   let displayText: string
   if (motorStopped) {

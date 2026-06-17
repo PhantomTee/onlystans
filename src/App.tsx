@@ -23,9 +23,9 @@ import ModeSelector from './components/controls/ModeSelector'
 import RPMSlider from './components/controls/RPMSlider'
 import PWMSlider from './components/controls/PWMSlider'
 import PIDControls from './components/controls/PIDControls'
+import LoadToggle from './components/controls/LoadToggle'
 import DataLoggerTable from './components/logger/DataLoggerTable'
 import ExportButton from './components/logger/ExportButton'
-import type { ShaftAttachment } from './components/motor/MotorModel3D'
 
 // ── Resizable three-column layout ─────────────────────────────────────────────
 function ResizableLayout({
@@ -103,15 +103,6 @@ function ResizableLayout({
 // ── Main dashboard ─────────────────────────────────────────────────────────────
 function Dashboard() {
   const { mode, currentActivity } = useActivity()
-  const [attachment, setAttachment] = useState<ShaftAttachment>('fan')
-
-  const ATTACHMENTS: { id: ShaftAttachment; label: string }[] = [
-    { id: 'fan',       label: 'Fan' },
-    { id: 'propeller', label: 'Propeller' },
-    { id: 'flywheel',  label: 'Flywheel' },
-    { id: 'grinding',  label: 'Grinder' },
-    { id: 'impeller',  label: 'Impeller' },
-  ]
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', width: '100vw', height: '100vh', overflow: 'hidden', backgroundColor: 'var(--rl-bg)', transition: 'background-color 0.2s' }}>
@@ -140,6 +131,9 @@ function Dashboard() {
                   <RPMSlider />
                   <PWMSlider />
                 </div>
+                <div>
+                  <LoadToggle />
+                </div>
               </div>
             </PanelWrapper>
 
@@ -153,45 +147,22 @@ function Dashboard() {
           <>
             {/* Motor model — centre stage */}
             <PanelWrapper>
-              {/* Shaft attachment selector */}
               <div style={{
                 display: 'flex',
                 alignItems: 'center',
+                justifyContent: 'space-between',
                 gap: 6,
                 padding: '8px 12px',
                 borderBottom: '1px solid var(--rl-border)',
-                flexWrap: 'wrap',
               }}>
-                <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 11, fontWeight: 600, color: 'var(--rl-label)', letterSpacing: '0.08em', textTransform: 'uppercase', marginRight: 4 }}>
-                  Shaft
+                <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: 11, fontWeight: 600, color: 'var(--rl-label)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                  JGB37-520 Gear Motor
                 </span>
-                {ATTACHMENTS.map(({ id, label }) => (
-                  <button
-                    key={id}
-                    onClick={() => setAttachment(id)}
-                    style={{
-                      fontFamily: "'DM Sans', Inter, sans-serif",
-                      fontSize: 11,
-                      fontWeight: 600,
-                      padding: '3px 10px',
-                      borderRadius: 9999,
-                      cursor: 'pointer',
-                      border: attachment === id ? '1px solid var(--rl-primary)' : '1px solid var(--rl-border)',
-                      background: attachment === id ? 'var(--rl-primary-muted)' : 'var(--rl-raised)',
-                      color: attachment === id ? 'var(--rl-primary)' : 'var(--rl-label)',
-                      transition: 'all 0.15s',
-                    }}
-                  >
-                    {label}
-                  </button>
-                ))}
-                <div style={{ marginLeft: 'auto' }}>
-                  <MotorStatus />
-                </div>
+                <MotorStatus />
               </div>
 
               {/* 3D canvas */}
-              <MotorModel3D attachment={attachment} />
+              <MotorModel3D />
             </PanelWrapper>
 
             {/* Live displays */}

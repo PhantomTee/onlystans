@@ -1,8 +1,8 @@
-export function rpmToPWM(rpm: number, maxRPM = 3000): number {
+export function rpmToPWM(rpm: number, maxRPM = 110): number {
   return Math.round((rpm / maxRPM) * 255)
 }
 
-export function pwmToRPM(pwm: number, maxRPM = 3000): number {
+export function pwmToRPM(pwm: number, maxRPM = 110): number {
   return Math.round((pwm / 255) * maxRPM)
 }
 

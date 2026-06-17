@@ -96,7 +96,7 @@ export function RPMGraph() {
       },
       y: {
         min: 0,
-        max: 3200,
+        max: 130,
         ticks: {
           color: chart.tick,
           font: { family: '"Share Tech Mono", monospace', size: 10 },
